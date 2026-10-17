@@ -494,5 +494,4 @@ orphan handoff. Their captured requests and goldens remain retired in history.
 GPT-OSS also authors the existing shared `arg_marker_in_string` and
 `deepseek_v41_mixed_control_text_in_string` cases with Harmony control spellings.
 Literal spellings supplied as ordinary tokens, rather than actual control-token
-IDs, have independent native Rust streaming coverage. The original live request
-suite and recorded deployment results live in `conformance/e2e/gpt_oss/`.
+IDs, have independent native Rust streaming coverage.
