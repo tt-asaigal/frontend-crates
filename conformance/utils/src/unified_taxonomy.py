@@ -232,7 +232,7 @@ def tax(scenario):
 
 
 # Display placement may change without renumbering published capture IDs.
-_DISPLAY_GROUP = UNIFIED_DISPLAY["group_overrides"]
+_DISPLAY_GROUP = dict(UNIFIED_DISPLAY["group_overrides"])
 
 
 def display_tax(scenario):
@@ -336,6 +336,7 @@ for _scenario, _active in GPT_OSS_PR424_REQUEST_VARIANTS.items():
         if group == _group and sub.isdecimal()
     ) + 1
     UNIFIED_TAX[_scenario + "_pr424"] = (_group, str(_next_sub))
+    _DISPLAY_GROUP[_scenario + "_pr424"] = "gpt_oss"
 
 
 def legacy_case_label(scenario):

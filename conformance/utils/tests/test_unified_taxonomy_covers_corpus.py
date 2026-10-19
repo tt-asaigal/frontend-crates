@@ -1901,6 +1901,20 @@ def test_display_ranks_follow_descriptions_without_changing_capture_ids():
     assert identities == {scenario: numbered_id(scenario) for scenario in scenarios}
 
 
+@pytest.mark.parametrize("scenario", [
+    scenario for scenario in UNIFIED_TAX
+    if G.scenario_families(scenario) == frozenset({"gpt_oss"})
+])
+def test_gpt_oss_only_cases_use_the_named_display_section(scenario):
+    assert taxonomy.display_tax(scenario)[0] == "gpt_oss"
+    assert taxonomy.display_section(scenario) == (
+        "unified_ggpt_oss", UNIFIED_GROUP_LABEL["gpt_oss"]
+    )
+    label = taxonomy.display_case_labels([scenario])[scenario]
+    assert label["compact_prefix"] == "gpt_oss"
+    assert taxonomy.scenario_for_label(numbered_id(scenario), scenario=scenario) == scenario
+
+
 def test_display_policy_has_no_dangling_groups_or_scenarios():
     assert set(taxonomy._DISPLAY_GROUP) <= set(UNIFIED_TAX)
     assert set(taxonomy._DISPLAY_GROUP.values()) <= set(UNIFIED_GROUP_LABEL)

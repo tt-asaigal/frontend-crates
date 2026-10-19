@@ -442,11 +442,11 @@ The check is the count: if a review round produced N defects the corpus missed a
 
 ## Shared schema conformance probes
 
-Expected values are authored in `conformance/utils/src/glm47_schema_cases.json`, independently of parser captures. `schema_cases.py` owns behavior classification; `unified_taxonomy.py` uses it for report sections and ordering. Group 7 has 62 visible entries covering 141 scenarios. Display numbers are ranks; fixture IDs and historical aliases stay unchanged.
+Expected values are authored in `conformance/utils/src/glm47_schema_cases.json`, independently of parser captures. `schema_cases.py` owns behavior classification; `unified_taxonomy.py` uses it for report sections and ordering. Group 7 has 60 visible entries covering 139 scenarios. Display numbers are ranks; fixture IDs and historical aliases stay unchanged.
 
 | Behavior section | Visible entries |
 |---|---:|
-| Text preservation | 5 |
+| Text preservation | 3 |
 | Declared types and enums | 10 |
 | Type arrays and null interpretation | 6 |
 | String constants | 10 |
@@ -474,14 +474,11 @@ All registered families are inspected and use native grammar. v1 batch excludes 
 Ambiguous constant unions retain each family's established schema-valid interpretation: Qwen and MiniMax can choose the typed JSON alternative, while GLM prefers a matching string constant. MiniMax M3 uses JSON object/array bodies in these probes; nested native tags do not encode an unconstrained numeric child type. Captures from unrelated families that violate these independent goldens remain visible rather than rewriting expectations.
 
 
-### GPT-OSS Harmony partial headers
+### GPT-OSS Harmony headers and retained request variants
 
-The named `gpt_oss` section covers incomplete directed assistant headers, where
-Harmony separates the role, channel and body with different control tokens.
-The shared guided-prefix scenarios already cover the corresponding boundaries
-in every other native family. These eight variants require Harmony's separate
-message delimiter and channel header; they therefore apply only to GPT-OSS.
-Published requests and checkpoint observations remain intact. Applicable earlier requests are retained alongside the partial-header cases; `_pr424` variants preserve distinct argument bytes, complete headers, and authored chunk schedules from #424 when a shared scenario ID already belongs to #434.
+The named `gpt_oss` section covers incomplete directed assistant headers, where Harmony separates the role, channel and body with different control tokens. The shared guided-prefix scenarios already cover the corresponding boundaries in every other native family. These eight partial-header variants require Harmony's separate message delimiter and channel header; they therefore apply only to GPT-OSS.
+
+The 30 active `_pr424` variants also belong in the named GPT-OSS section. They preserve published Harmony argument bytes, complete headers, and authored chunk schedules from #424 when an unsuffixed shared scenario already belongs to #434. Their existing shared parents cover the corresponding behavior across the other applicable families. Display placement changes without renaming the published numeric IDs or changing requests, goldens, or historical observations.
 
 - `harmony_guided_json_gt_in_argument_bare_opener`: a JSON argument containing `>` settles a partial header.
 - `harmony_guided_json_gt_in_argument_named_bare_opener`: the same boundary after a recipient name.

@@ -53,9 +53,9 @@ def test_exact_fold_dimensions_and_section_order():
                     else {"String / Forward", "String / Reversed", "Typed value / Forward", "Typed value / Reversed"})
         assert {label for _, label in children} == expected
         assert parent in {scenario for scenario, _ in children}
-    ordered = sorted((scenario for scenario in taxonomy.UNIFIED_TAX if taxonomy.tax(scenario)[0] == 7),
+    ordered = sorted((scenario for scenario in taxonomy.UNIFIED_TAX if taxonomy.display_tax(scenario)[0] == 7),
                      key=taxonomy.display_sort_key)
-    assert len(ordered) == 141
+    assert len(ordered) == 139
     assert list(dict.fromkeys(argument_section(s) for s in ordered)) == list(ARGUMENT_SECTIONS)
 
 

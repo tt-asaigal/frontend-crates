@@ -1806,12 +1806,12 @@ def test_argument_sections_and_folds_preserve_all_authored_scenarios(model_v2):
     tab = _tab(model_v2, "tab-unified")
     sections = [group for group in tab["column_groups"] if group["key"].startswith("unified_g7_")]
     assert [group["label"] for group in sections] == list(ARGUMENT_SECTIONS.values())
-    assert [group["span"] for group in sections] == [5, 10, 6, 10, 17, 14]
+    assert [group["span"] for group in sections] == [3, 10, 6, 10, 17, 14]
     columns = [column for column in tab["columns"] if column["group_key"].startswith("unified_g7_")]
-    assert len(columns) == 62
-    assert [column["display_number"] for column in columns] == list(range(1, 63))
-    expected = {scenario for scenario in unified_taxonomy.UNIFIED_TAX if unified_taxonomy.tax(scenario)[0] == 7}
-    assert len(expected) == 141
+    assert len(columns) == 60
+    assert [column["display_number"] for column in columns] == list(range(1, 61))
+    expected = {scenario for scenario in unified_taxonomy.UNIFIED_TAX if unified_taxonomy.display_tax(scenario)[0] == 7}
+    assert len(expected) == 139
     found = set()
     for row in tab["rows"]:
         if row.get("section"):
@@ -1830,6 +1830,27 @@ def test_argument_sections_and_folds_preserve_all_authored_scenarios(model_v2):
             assert len(cell["variants"]) == 4
             assert column["schemas"]
     assert found == expected
+
+
+def test_gpt_oss_only_columns_stay_in_the_harmony_section(model_v2):
+    tab = _tab(model_v2, "tab-unified")
+    columns = {column["sub"]: column for column in tab["columns"]}
+    scenarios = {
+        scenario for scenario in unified_taxonomy.UNIFIED_TAX
+        if table.gen_unified_golden.scenario_families(scenario) == frozenset({"gpt_oss"})
+    }
+    for scenario in scenarios:
+        column = columns[scenario]
+        assert column["group_key"] == "unified_ggpt_oss"
+        assert column["compact_prefix"] == "gpt_oss"
+        for row in tab["rows"]:
+            if row.get("section"):
+                continue
+            assert (row["cells"][scenario]["status"] == "na") == (row["family"] != "gpt_oss")
+    reported = columns["arg_marker_in_string_pr424"]
+    assert reported["case_id"] == "UNIFIED.7-arg_marker_in_string_pr424"
+    assert reported["label"] == "gpt_oss-arg_marker_in_string_pr424"
+    assert columns["arg_marker_in_string"]["group_key"].startswith("unified_g7_")
 
 
 @pytest.mark.parametrize(("unavailable", "reason"), [
