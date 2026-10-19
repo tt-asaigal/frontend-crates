@@ -162,7 +162,6 @@ struct HarmonyRuntime {
     next_call_index: usize,
     text_pending: String,
     outside_pending: Vec<u32>,
-    orphan_handoff: bool,
     finished: bool,
 }
 
@@ -196,7 +195,6 @@ impl HarmonyRuntime {
             next_call_index: 0,
             text_pending: String::new(),
             outside_pending: Vec::new(),
-            orphan_handoff: false,
             finished: false,
         })
     }
@@ -329,7 +327,6 @@ impl HarmonyRuntime {
     fn process_token(&mut self, id: u32, output: &mut UnifiedParserOutput) -> Result<()> {
         if !self.inside_message {
             if id == self.start_id {
-                self.orphan_handoff = false;
                 self.inside_message = true;
                 self.process_parser_token(id, output)?;
             } else if self.allow_implicit_channel_header
@@ -344,16 +341,13 @@ impl HarmonyRuntime {
                 }
                 self.process_token(id, output)?;
             } else if let Some(marker) = self.marker_ids.get(&id) {
-                if id == self.handoff_id {
-                    self.orphan_handoff = true;
-                }
                 tracing::warn!(
                     why = "orphan_harmony_control",
                     skipped_tokens = 1,
                     "discarded an orphan Harmony control token"
                 );
                 let _ = marker;
-            } else if !self.orphan_handoff {
+            } else {
                 self.outside_pending.push(id);
                 if let Ok(text) = self.encoding.tokenizer().decode_utf8(&self.outside_pending) {
                     self.outside_pending.clear();
@@ -1970,6 +1964,46 @@ mod tests {
         assert!(
             matches!(parser.push("again").unwrap().as_slice(), [UnifiedParserEvent::Reasoning(text)] if text == "again")
         );
+    }
+
+    #[test]
+    fn orphan_handoff_preserves_prose_but_truncated_tool_body_does_not() {
+        let orphan = format!("{HANDOFF}still thinking about it");
+        let truncated = format!(
+            "{START}assistant to=functions.lookup{CHANNEL}commentary{MESSAGE}{{\"q\":still thinking about it"
+        );
+        let mut parser = gpt_oss_unified(&[]);
+        for (input, expected) in [
+            (
+                &orphan,
+                vec![UnifiedEvent::Text {
+                    text: "still thinking about it".into(),
+                }],
+            ),
+            (&truncated, Vec::new()),
+        ] {
+            for split in input.char_indices().map(|(at, _)| at).chain([input.len()]) {
+                parser.reset();
+                parser.initialize(&[]).unwrap();
+                let mut events = parser.push(&input[..split]).unwrap();
+                events.extend(parser.push(&input[split..]).unwrap());
+                events.extend(parser.finish().unwrap().events);
+                assert_eq!(crate::unified::assemble(&events), expected, "split={split}");
+            }
+            let ids = crate::tool_calling::harmony::encode_harmony(input).unwrap();
+            for split in 0..=ids.len() {
+                parser.reset();
+                parser.initialize(&[]).unwrap();
+                let mut events = parser.push_tokens(&ids[..split]).unwrap();
+                events.extend(parser.push_tokens(&ids[split..]).unwrap());
+                events.extend(parser.finish().unwrap().events);
+                assert_eq!(
+                    crate::unified::assemble(&events),
+                    expected,
+                    "token split={split}"
+                );
+            }
+        }
     }
 
     #[test]
