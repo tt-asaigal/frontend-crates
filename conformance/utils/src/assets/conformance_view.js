@@ -167,13 +167,13 @@
   var _summaryLegendHtml = null;
 
   const tooltipIds = new WeakMap();
-  function registerTooltip(td, model, fixtureHref, stateKey) {
+  function registerTooltip(td, model, fixtureHref, stateKey, cellModel) {
     if (fixtureHref) td.dataset.ttipFixture = fixtureHref;
     if (stateKey) td.dataset.ttipKey = stateKey;
     const id = tooltipIds.get(model) || String(++_ttipSeq);
     tooltipIds.set(model, id);
     td.setAttribute('data-ttip-id', id);
-    _ttipModels[id] = model;
+    _ttipModels[id] = {tooltip: model, cell: cellModel};
   }
 
   function buildTooltipInto(td) {
@@ -182,7 +182,8 @@
     if (!ttip || ttip.classList.contains('ttip-built')) { return; }
     // A clone of an ALREADY-built tooltip carries the built content + this class, so
     // it's skipped above. A fresh (unbuilt) cell/clone builds from the keyed model.
-    var m = _ttipModels[td.getAttribute('data-ttip-id')];
+    var entry = _ttipModels[td.getAttribute('data-ttip-id')];
+    var m = entry && entry.tooltip;
     ttip.classList.add('ttip-built');
     if (!m) { return; }
     // Append (don't overwrite): conformance.js may already have inserted its
@@ -195,7 +196,8 @@
   }
   // Expose so conformance.js (or tests) can force-build a specific cell if needed.
   window.__buildTooltip = buildTooltipInto;
-  window.__conformanceTooltipModel = cell => _ttipModels[cell.getAttribute("data-ttip-id")];
+  window.__conformanceTooltipModel = cell => (_ttipModels[cell.getAttribute("data-ttip-id")] || {}).tooltip;
+  window.__conformanceCellModel = cell => (_ttipModels[cell.getAttribute("data-ttip-id")] || {}).cell;
   window.__registerConformanceTooltip = registerTooltip;
   window.__conformanceCaseTooltip = columnGrammarModel;
 
@@ -1065,7 +1067,7 @@
       // Empty .ttip now (so conformance.js's attachTooltip finds it); content built
       // lazily on first interaction from the keyed model (survives transpose clones).
       registerTooltip(td, cell.tooltip, cell.fixture_href,
-        JSON.stringify(['cell', tab.id, cell.case_id || col.sub, cell.family || '']));
+        JSON.stringify(['cell', tab.id, cell.case_id || col.sub, cell.family || '']), cell);
     }
     return td;
   }

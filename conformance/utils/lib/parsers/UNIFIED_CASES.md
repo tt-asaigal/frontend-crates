@@ -81,7 +81,7 @@ Every active Unified ID uses `UNIFIED.<group>-<description>`, for example `UNIFI
 - **`3-text_only`** (`text_only`) Plain content, zero tool structure. No spurious call. This is also covered in: TOOLCALLING.streamv1.3. No e2e case has this shape: Qwen3.6 always emits a reasoning span, so the plain-content case is corpus-only.
 
 ### Group 4 — TC Malformed envelope
-- **`4-tool_block_never_closed_then_text`** (`tool_block_never_closed_then_text`) The calls opener arrives without its closing marker and prose follows. The prose remains inside the unterminated tool envelope and is discarded at EOF; it is not visible answer text. This is applicable to DSv4.1 because its native grammar has an explicit calls envelope. The retained GPT-OSS request instead starts with an orphan handoff and never opens a tool message: its following prose remains visible. Genuine truncated Harmony messages have separate EOF and resynchronization cases.
+- **`4-tool_block_never_closed_then_text`** (`tool_block_never_closed_then_text`) The calls opener arrives without its closing marker and prose follows. The prose remains inside the unterminated tool envelope and is discarded at EOF; it is not visible answer text. This is applicable to DSv4.1 because its native grammar has an explicit calls envelope. The retained GPT-OSS request instead starts with an orphan handoff and never opens a tool message: its following prose remains visible. Genuine Harmony truncation is covered by shared `tool_no_close` and its next-message recovery variant.
 - **`4-tool_markup_only_emits_nothing`** (`tool_markup_only_emits_nothing`) A calls envelope contains no invocation. Both markers are control syntax and the parser emits no event.
 
 ### Group 5 — TC Truncation / recovery (TOOLCALLING.streamv1.5)
@@ -442,7 +442,7 @@ The check is the count: if a review round produced N defects the corpus missed a
 
 ## Shared schema conformance probes
 
-Expected values are authored in `conformance/utils/src/glm47_schema_cases.json`, independently of parser captures. `schema_cases.py` owns behavior classification; `unified_taxonomy.py` uses it for report sections and ordering. Group 7 has 60 visible entries covering 139 scenarios. Display numbers are ranks; fixture IDs and historical aliases stay unchanged.
+Expected values are authored in `conformance/utils/src/glm47_schema_cases.json`, independently of parser captures. `schema_cases.py` owns behavior classification; `unified_taxonomy.py` uses it for report sections and ordering. Group 7 has 60 visible entries covering 142 scenarios. Display numbers are ranks; fixture IDs and historical aliases stay unchanged.
 
 | Behavior section | Visible entries |
 |---|---:|
@@ -476,9 +476,11 @@ Ambiguous constant unions retain each family's established schema-valid interpre
 
 ### GPT-OSS Harmony headers and retained request variants
 
-The named `gpt_oss` section covers incomplete directed assistant headers, where Harmony separates the role, channel and body with different control tokens. The shared guided-prefix scenarios already cover the corresponding boundaries in every other native family. These eight partial-header variants require Harmony's separate message delimiter and channel header; they therefore apply only to GPT-OSS.
+The three standalone GPT-OSS entries test recipient/channel ordering and the template JSON format label. Incomplete Harmony headers, interrupted reasoning, quoted controls, malformed bodies, and historical `_pr424` requests are variants beneath their shared semantic parents. `unified_taxonomy.case_fold()` owns these relationships, and `case_variants.group_unified_variants()` folds them through the same path as schema variants. Each popup retains the original case ID, request, initialization, chunk schedule, expected events, and independent observations; a failing or missing applicable child cannot become a passing parent.
 
-The 30 active `_pr424` variants also belong in the named GPT-OSS section. They preserve published Harmony argument bytes, complete headers, and authored chunk schedules from #424 when an unsuffixed shared scenario already belongs to #434. Their existing shared parents cover the corresponding behavior across the other applicable families. Display placement changes without renaming the published numeric IDs or changing requests, goldens, or historical observations.
+The 30 active `_pr424` variants preserve #424's published requests. Eighteen differ from the existing parent only in delivery: a single push versus marker-aligned pushes. The other twelve preserve distinct header or payload bytes. They share headings rather than creating separate GPT-only behavior categories. A shared heading may be covered by a family-native child even when the original parent specimen does not apply to that family.
+
+The redundant `gpt_oss_truncated_tool_at_eof_is_dropped` execution is retired because shared `tool_no_close` already tests a complete Harmony JSON body without its handoff. Its original request, expected events, aliases, and capture checkpoints remain in history. Next-message recovery remains a separate input variant under the same shared heading. Empty raw bodies, malformed JSON, quoted controls, and elided reasoning closers retain their distinct stimuli; grouping does not assert identical native recovery policies across families.
 
 - `harmony_guided_json_gt_in_argument_bare_opener`: a JSON argument containing `>` settles a partial header.
 - `harmony_guided_json_gt_in_argument_named_bare_opener`: the same boundary after a recipient name.

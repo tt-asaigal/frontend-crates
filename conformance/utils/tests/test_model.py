@@ -1457,7 +1457,7 @@ def test_gpt_oss_uncaptured_peer_batch_results_are_missing_not_unsupported(model
     keys = {"vllm_python_batch@" + version for version in ("0.23.0", "0.24.0", "0.25.1", "0.26.0")}
     keys.add("sglang_python_batch@0.5.14")
     cases = [cell for cell in leaf_cells(row).values() if cell["status"] != "na"]
-    assert len(cases) == 271
+    assert len(cases) == 270
     assert leaf_cells(row)["tool_only"]["case_id"] == "UNIFIED.1-tool_only"
     missing = []
     for cell in cases:
@@ -1811,7 +1811,7 @@ def test_argument_sections_and_folds_preserve_all_authored_scenarios(model_v2):
     assert len(columns) == 60
     assert [column["display_number"] for column in columns] == list(range(1, 61))
     expected = {scenario for scenario in unified_taxonomy.UNIFIED_TAX if unified_taxonomy.display_tax(scenario)[0] == 7}
-    assert len(expected) == 139
+    assert len(expected) == 142
     found = set()
     for row in tab["rows"]:
         if row.get("section"):
@@ -1832,25 +1832,29 @@ def test_argument_sections_and_folds_preserve_all_authored_scenarios(model_v2):
     assert found == expected
 
 
-def test_gpt_oss_only_columns_stay_in_the_harmony_section(model_v2):
+def test_shared_variants_consolidate_without_losing_requests(model_v2):
     tab = _tab(model_v2, "tab-unified")
     columns = {column["sub"]: column for column in tab["columns"]}
-    scenarios = {
-        scenario for scenario in unified_taxonomy.UNIFIED_TAX
-        if table.gen_unified_golden.scenario_families(scenario) == frozenset({"gpt_oss"})
-    }
-    for scenario in scenarios:
-        column = columns[scenario]
-        assert column["group_key"] == "unified_ggpt_oss"
-        assert column["compact_prefix"] == "gpt_oss"
-        for row in tab["rows"]:
-            if row.get("section"):
-                continue
-            assert (row["cells"][scenario]["status"] == "na") == (row["family"] != "gpt_oss")
-    reported = columns["arg_marker_in_string_pr424"]
-    assert reported["case_id"] == "UNIFIED.7-arg_marker_in_string_pr424"
-    assert reported["label"] == "gpt_oss-arg_marker_in_string_pr424"
-    assert columns["arg_marker_in_string"]["group_key"].startswith("unified_g7_")
+    assert {s for s in columns if unified_taxonomy.display_tax(s)[0] == "gpt_oss"} == {
+        "gpt_oss_channel_header_variants", "gpt_oss_channel_first_tool_header",
+        "gpt_oss_chat_template_tool_header"}
+    assert not (set(columns) & set(unified_taxonomy.SHARED_CASE_VARIANTS))
+    for row in tab["rows"]:
+        if row.get("section"):
+            continue
+        leaves = leaf_cells(row)
+        actual = {s for s, cell in leaves.items() if cell["status"] != "na"}
+        expected = {s for s in unified_taxonomy.UNIFIED_TAX
+                    if row["family"] in table.gen_unified_golden.scenario_families(s)}
+        assert actual == expected
+        for variant, (parent, _) in unified_taxonomy.SHARED_CASE_VARIANTS.items():
+            if variant in expected:
+                cell = row["cells"][parent]
+                assert cell["status"] != "na"
+                assert variant in {leaf["sub"] for leaf in cell["variants"]}
+    parent = columns["arg_marker_in_string"]
+    assert parent["case_id"] == "UNIFIED.7-arg_marker_in_string"
+    assert parent["group_key"] == "unified_g7_text"
 
 
 @pytest.mark.parametrize(("unavailable", "reason"), [

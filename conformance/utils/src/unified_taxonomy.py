@@ -23,7 +23,7 @@ import re
 
 from impls import UNIFIED_DISPLAY, UNIFIED_MARKER_FAMILIES
 from null_cases import NULL_VARIANTS
-from schema_cases import ARGUMENT_SECTIONS, CONFORMANCE_CASES, SCHEMA_GROUPS, argument_section, schema_group
+from schema_cases import ARGUMENT_SECTIONS, CONFORMANCE_CASES, SCHEMA_GROUPS, argument_section, schema_fold, schema_group
 
 UNIFIED_TAX = {
     'harmony_guided_json_gt_in_argument_bare_opener': ("gpt_oss", "1"),
@@ -232,18 +232,21 @@ def tax(scenario):
 
 
 # Display placement may change without renumbering published capture IDs.
-_DISPLAY_GROUP = dict(UNIFIED_DISPLAY["group_overrides"])
+_DISPLAY_GROUP = UNIFIED_DISPLAY["group_overrides"]
 
 
 def display_tax(scenario):
     group, sub = tax(scenario)
+    parent = case_fold(scenario)
+    if parent and parent[0] != scenario:
+        return display_tax(parent[0])[0], sub
     return _DISPLAY_GROUP.get(scenario, group), sub
 
 
 def display_section(scenario):
     group, _ = display_tax(scenario)
     if group == 7:
-        section = argument_section(scenario)
+        section = argument_section((case_fold(scenario) or (scenario, ""))[0])
         return f"unified_g7_{section}", ARGUMENT_SECTIONS[section]
     return f"unified_g{group}", UNIFIED_GROUP_LABEL.get(group, "Other")
 
@@ -251,7 +254,7 @@ def display_section(scenario):
 def display_sort_key(scenario):
     group, _ = display_tax(scenario)
     group_key = (0, group) if isinstance(group, int) else (1, str(group))
-    section_rank = list(ARGUMENT_SECTIONS).index(argument_section(scenario)) if group == 7 else 0
+    section_rank = list(ARGUMENT_SECTIONS).index(argument_section((case_fold(scenario) or (scenario, ""))[0])) if group == 7 else 0
     return group_key, section_rank, case_description(scenario), scenario
 
 
@@ -336,7 +339,33 @@ for _scenario, _active in GPT_OSS_PR424_REQUEST_VARIANTS.items():
         if group == _group and sub.isdecimal()
     ) + 1
     UNIFIED_TAX[_scenario + "_pr424"] = (_group, str(_next_sub))
-    _DISPLAY_GROUP[_scenario + "_pr424"] = "gpt_oss"
+
+
+
+# Historical requests remain separate executions, but share one semantic heading.
+RETIRED_SCENARIOS = frozenset({"gpt_oss_truncated_tool_at_eof_is_dropped"})
+SHARED_CASE_VARIANTS = {
+    **{scenario + "_pr424": (scenario, "Retained #424 delivery / input")
+       for scenario, active in GPT_OSS_PR424_REQUEST_VARIANTS.items() if active},
+    **{scenario: (scenario.removeprefix("harmony_"), "Harmony partial header")
+       for scenario in UNIFIED_TAX if scenario.startswith("harmony_")},
+    "gpt_oss_multiple_unknown_and_empty_tools": ("two_calls", "Empty body and unoffered names"),
+    "gpt_oss_control_marker_inside_argument_string": ("arg_marker_in_string", "All Harmony controls"),
+    "gpt_oss_truncated_tool_resynchronizes_at_next_message": ("tool_no_close", "Next message recovery"),
+    "gpt_oss_interrupted_reasoning_then_tool": ("tool_in_reason", "Interrupted Harmony reasoning"),
+    "gpt_oss_interrupted_reasoning_then_tool_with_text": ("tool_in_reason_with_text", "Interrupted Harmony reasoning"),
+    "gpt_oss_interrupted_reasoning_then_response": ("reason_then_content", "Elided Harmony reasoning close"),
+    "kimi_k3_elided_think_close_to_response": ("reason_then_content", "Elided Kimi K3 reasoning close"),
+    "gpt_oss_invalid_tool_body_then_empty_call": ("malformed_json_then_two_valid_calls", "Invalid text then empty call"),
+    "gpt_oss_invalid_tool_body_then_valid_call": ("malformed_json_then_two_valid_calls", "Truncated JSON then valid call"),
+}
+_SHARED_VARIANT_PARENTS = {parent for parent, _ in SHARED_CASE_VARIANTS.values()}
+
+
+def case_fold(scenario):
+    """One grouping owner for schema, native grammar, and delivery variants."""
+    return (schema_fold(scenario) or SHARED_CASE_VARIANTS.get(scenario)
+            or ((scenario, "Standard") if scenario in _SHARED_VARIANT_PARENTS else None))
 
 
 def legacy_case_label(scenario):

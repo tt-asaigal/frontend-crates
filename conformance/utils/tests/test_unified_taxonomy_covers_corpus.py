@@ -121,7 +121,7 @@ def test_every_corpus_scenario_has_a_taxonomy_entry() -> None:
 def test_taxonomy_has_no_entry_without_a_corpus_case() -> None:
     """The other direction: a stale entry means a case was renamed or deleted and the map
     still claims a number for it, so the number is reserved against nothing."""
-    scenarios = set(corpus_scenarios())
+    scenarios = set(corpus_scenarios()) | taxonomy.RETIRED_SCENARIOS
     stale = sorted(s for s in UNIFIED_TAX if s not in scenarios)
     assert not stale, (
         f"{len(stale)} UNIFIED_TAX entr(ies) name a scenario the corpus does not emit: "
@@ -894,7 +894,7 @@ def test_unified_case_counts_match_the_generator():
         "deepseek_v41": 127,
         "gemma4": 124,
         "glm47": 121,
-        "gpt_oss": 157,
+        "gpt_oss": 156,
         "kimi_k2": 121,
         "kimi_k3": 128,
         "muse_glimmer": 128,
@@ -1728,7 +1728,7 @@ def _assert_cross_family_contract(corpus):
                         if isinstance(call["arguments"]["x"], str):
                             call["arguments"]["x"] = json.loads(call["arguments"]["x"])
             by_scenario[scenario][family] = (events, init, case["finish_reason"], case["policy"], suppressed)
-    assert set(by_scenario) == set(UNIFIED_TAX)
+    assert set(by_scenario) == set(UNIFIED_TAX) - taxonomy.RETIRED_SCENARIOS
     for scenario, families in by_scenario.items():
         assert set(families) == (set(G.scenario_families(scenario)) & set(NATIVE_FAMILIES)), (scenario, "applicability", set(families))
         contracts = list(families.items())
@@ -1905,13 +1905,17 @@ def test_display_ranks_follow_descriptions_without_changing_capture_ids():
     scenario for scenario in UNIFIED_TAX
     if G.scenario_families(scenario) == frozenset({"gpt_oss"})
 ])
-def test_gpt_oss_only_cases_use_the_named_display_section(scenario):
-    assert taxonomy.display_tax(scenario)[0] == "gpt_oss"
-    assert taxonomy.display_section(scenario) == (
-        "unified_ggpt_oss", UNIFIED_GROUP_LABEL["gpt_oss"]
-    )
-    label = taxonomy.display_case_labels([scenario])[scenario]
-    assert label["compact_prefix"] == "gpt_oss"
+def test_gpt_oss_variants_use_shared_parents_or_explicit_header_grammar(scenario):
+    fold = taxonomy.case_fold(scenario)
+    if fold:
+        parent, _ = fold
+        assert parent != scenario
+        assert len(G.scenario_families(parent)) > 1
+        assert taxonomy.display_section(scenario) == taxonomy.display_section(parent)
+    else:
+        assert scenario in {"gpt_oss_channel_header_variants", "gpt_oss_channel_first_tool_header",
+                            "gpt_oss_chat_template_tool_header"}
+        assert taxonomy.display_tax(scenario)[0] == "gpt_oss"
     assert taxonomy.scenario_for_label(numbered_id(scenario), scenario=scenario) == scenario
 
 
@@ -1932,3 +1936,23 @@ def test_preserved_requests_and_goldens_are_independent_across_builds():
     changed["golden"][0]["arguments"]["city"] = "changed"
     changed["init"]["starting_state"] = "Reasoning"
     assert build_cases("gpt_oss")[case_id] == expected
+
+
+def test_retired_harmony_eof_case_keeps_its_history_and_shared_contract():
+    path = SRC.parents[2] / "conformance/fixtures-unified-v2/families/gpt_oss/inputs_and_golden.yaml"
+    cases = yaml.safe_load(path.read_text())["cases"]
+    retired = cases["gpt_oss_truncated_tool_at_eof_is_dropped"]
+    parent = cases["tool_no_close"]
+    assert retired["lifecycle"] == "retired"
+    assert retired["display_id"] is None
+    assert numbered_id("gpt_oss_truncated_tool_at_eof_is_dropped") in retired["historical_ids"]
+    assert retired["golden"]["assembled"] == parent["golden"]["assembled"] == []
+    for field in ("init", "tools", "finish_reason"):
+        assert retired["request"][field] == parent["request"][field]
+    for case in (retired, parent):
+        raw = case["request"]["input"]
+        body = raw.split("<|message|>", 1)[1]
+        assert isinstance(json.loads(body), dict)
+        assert not raw.endswith(control_tokens("gpt_oss")[3])
+    assert not G.scenario_families("gpt_oss_truncated_tool_at_eof_is_dropped")
+    assert "UNIFIED.gpt_oss_truncated_tool_at_eof_is_dropped.gpt_oss" not in G.build_cases("gpt_oss")

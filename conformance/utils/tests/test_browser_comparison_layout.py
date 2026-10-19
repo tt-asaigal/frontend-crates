@@ -761,6 +761,31 @@ def test_status_palette_and_source_blocker_are_distinct(matrix_driver, rendered_
                for status in ("pass", "diverge", "leak", "error", "missing", "blocked"))
 
 
+@pytest.mark.parametrize("vertical", [False, True])
+def test_shared_parent_displays_missing_child_capture(matrix_driver, rendered_page, vertical):
+    d = matrix_driver
+    query = "?slots_tab-unified=vllm_python_batch%400.26.0%2C%2C"
+    load(d, rendered_page, query + ("&vertical=1" if vertical else ""))
+    result = d.execute_script("""
+        const hosts = [...document.querySelectorAll('#tab-unified td.cell[data-ttip-id]')];
+        const host = hosts.find(node => {
+            const cell = window.__conformanceCellModel(node);
+            return node.getBoundingClientRect().height > 0 && cell && cell.family === 'gpt_oss'
+                && cell.sub === 'tool_in_reason';
+        });
+        if (!host) return null;
+        const cell = window.__conformanceCellModel(host);
+        return {status:window.__conformanceOutputStatus({id:'tab-unified'}, cell,
+                    {key:'vllm_python_batch@0.26.0'}, 'golden'),
+                painted:host.querySelector('[data-capture="vllm_python_batch@0.26.0"]').className,
+                variants:cell.variants.map(variant=>variant.sub)};
+    """)
+    assert result is not None
+    assert result["status"] == "missing"
+    assert "status-missing" in result["painted"]
+    assert "gpt_oss_interrupted_reasoning_then_tool" in result["variants"]
+
+
 def test_popup_columns_follow_slot_order_after_swapping_engines(matrix_driver, rendered_page):
     d = matrix_driver
     load(d, rendered_page)

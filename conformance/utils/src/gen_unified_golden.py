@@ -27,7 +27,7 @@ import yaml
 
 import markers
 from schema_cases import CONFORMANCE_CASES, unified_schema_cases
-from unified_taxonomy import GPT_OSS_PR424_REQUEST_VARIANTS, numbered_id
+from unified_taxonomy import GPT_OSS_PR424_REQUEST_VARIANTS, RETIRED_SCENARIOS, numbered_id
 from null_cases import MIXED_CASE_FAMILIES, NULL_VARIANTS, MIXED_LABELS_SCHEMA, MIXED_LABELS_ARGS, null_description
 
 # Families and their golden-spec filenames come from the ONE declaration in
@@ -851,20 +851,6 @@ EDGE = [
              "<|start|>assistant to=functions.lookup<|channel|>commentary "
              "<|message|>{\"q\":\"unfinished\"}"
              "<|start|>assistant<|channel|>final<|message|>recovered<|return|>",
-             D("UNSUPPORTED", "No GPT-OSS vLLM Unified capture is configured."),
-             M,
-         ),
-     })),
-
-    ("gpt_oss_truncated_tool_at_eof_is_dropped",
-     "An unterminated Harmony tool message at end of stream emits nothing; no partial call or argument text leaks.",
-     ["I4", "I5"],
-     [],
-     {"starting_state": "None", "tool_output_mode": "Native", "named_tool": None},
-     OnlyFamilies({
-         "gpt_oss": (
-             "<|start|>assistant to=functions.lookup<|channel|>commentary "
-             "<|message|>{\"q\":\"unfinished\"}",
              D("UNSUPPORTED", "No GPT-OSS vLLM Unified capture is configured."),
              M,
          ),
@@ -2139,7 +2125,9 @@ HARMONY_INAPPLICABLE_EDGE_CASES = {
     "native_quoted_control_then_call",
     # Harmony has one call terminator, not distinct tool-open and tool-close tokens.
     "guided_json_tool_open_before_payload",
-    # These rely on another grammar's separate invoke opener or parameter brackets.
+    # These literal specimens rely on separate invoke or parameter brackets.
+    # Interrupted Harmony reasoning is represented by its native variant beneath
+    # the same shared heading, rather than by inventing another nested request.
     "guided_json_schema_error_not_a_call_bare_opener",
     "guided_json_gt_in_argument_bare_opener",
     "guided_json_gt_in_argument_named_bare_opener",
@@ -2978,16 +2966,6 @@ EDGE.append((
 # Harmony partial headers are a distinct grammar boundary. The previous GPT-OSS
 # projections used no invocation prefix (or an orphan handoff); retain their
 # captured history and replace them with explicitly authored Harmony scenarios.
-GPT_OSS_RETIRED_HEADER_SCENARIOS = frozenset({
-    'guided_json_gt_in_argument_bare_opener',
-    'guided_json_gt_in_argument_named_bare_opener',
-    'guided_json_narrated_prefix_inside_reasoning',
-    'guided_json_schema_error_nameless_element_bare_opener',
-    'guided_json_schema_error_not_a_call_bare_opener',
-    'guided_json_stray_prefix_before_reasoning',
-    'guided_json_syntax_error_bare_opener',
-    'guided_json_tool_open_before_payload',
-})
 GPT_OSS_HEADER_INPUTS = {
     'harmony_guided_json_gt_in_argument_bare_opener': '<|start|>assistant<|channel|>commentary to=functions.[{"name": "get_weather", "arguments": {"city": "a > b"}}]',
     'harmony_guided_json_gt_in_argument_named_bare_opener': '<|start|>assistant<|channel|>commentary to=functions.get_weather[{"name": "get_weather", "arguments": {"city": "a > b"}}]',
@@ -2998,6 +2976,9 @@ GPT_OSS_HEADER_INPUTS = {
     'harmony_guided_json_syntax_error_bare_opener': '<|start|>assistant<|channel|>commentary to=functions.[{"name": "get_weather", "arguments": {"city": ',
     'harmony_guided_json_tool_open_before_payload': '<|start|>assistant<|channel|>commentary to=functions.[{"name": "get_weather", "arguments": {"city": "Paris"}}]',
 }
+GPT_OSS_RETIRED_HEADER_SCENARIOS = frozenset(
+    scenario.removeprefix("harmony_") for scenario in GPT_OSS_HEADER_INPUTS
+)
 for _edge in tuple(EDGE):
     if _edge[0] in GPT_OSS_RETIRED_HEADER_SCENARIOS:
         _name, _desc, _policy, _golden, _init, *_ = _edge
@@ -3251,6 +3232,8 @@ def scenario_families(scenario):
     uses this same declaration to render explicit n/a cells instead of
     silently dropping them.
     """
+    if scenario in RETIRED_SCENARIOS:
+        return frozenset()
     original = scenario.removesuffix("_pr424")
     if original != scenario and original in GPT_OSS_PR424_REQUEST_VARIANTS:
         return frozenset({"gpt_oss"}) if GPT_OSS_PR424_REQUEST_VARIANTS[original] else frozenset()
