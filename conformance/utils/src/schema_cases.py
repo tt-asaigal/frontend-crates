@@ -66,6 +66,7 @@ _SCHEMA_SECTION = {
 
 
 def argument_section(scenario: str) -> str:
+    scenario = scenario.removesuffix("_pr424")
     if scenario.startswith("schema_"):
         return _SCHEMA_SECTION[schema_group(scenario.removeprefix("schema_"))]
     if scenario in {"arg_unicode", "arg_marker_in_string", "deepseek_v41_mixed_control_text_in_string"}:

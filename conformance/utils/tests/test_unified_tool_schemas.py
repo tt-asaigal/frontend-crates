@@ -86,6 +86,10 @@ def _assert_golden_schemas(cases, tools):
         offered_tools = case.get("tools", tools)
         schemas = {tool["name"]: tool["parameters"] for tool in offered_tools}
         assert len(schemas) == len(offered_tools)
+        if not offered_tools:
+            # Published Harmony requests can exercise lexical parsing without schemas.
+            assert case_id.endswith(".gpt_oss")
+            continue
         for event in case["golden"]:
             if event["kind"] == "tool_call":
                 if case_id.startswith("UNIFIED.malformed_json_then_two_valid_calls.") and event["name"] == "bad":
@@ -105,8 +109,18 @@ def test_all_authored_successful_calls_match_offered_schemas(family):
 def test_schema_guard_rejects_old_array_as_string_declaration(family):
     tools = unified_tools()
     next(tool for tool in tools if tool["name"] == "sum_values")["parameters"]["properties"]["values"] = {"type": "string"}
+    cases = G.build_cases(family)
+    for case in cases.values():
+        if not case.get("tools") and any(
+            event["kind"] == "tool_call" and event["name"] == "sum_values"
+            for event in case["golden"]
+        ):
+            case["tools"] = copy.deepcopy(tools)
+        for tool in case.get("tools", []):
+            if tool["name"] == "sum_values":
+                tool["parameters"]["properties"]["values"] = {"type": "string"}
     with pytest.raises(AssertionError):
-        _assert_golden_schemas(G.build_cases(family), tools)
+        _assert_golden_schemas(cases, tools)
 
 
 def test_schema_guard_rejects_old_numeric_string_successor():

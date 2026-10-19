@@ -241,6 +241,16 @@ changes:
       unavailable:
         code: legacy_unclassified
         detail: 'request initialization rejected: muse_glimmer has no reasoning marker pair, so the guided-JSON path has no                  reasoning spec to build on; use native tool output'
+  guided_json_native_parameter_string_before_payload:
+    observation:
+      error:
+        code: legacy_unclassified
+        detail: 'initialize_request: muse_glimmer has no reasoning marker pair, so the guided-JSON path has no                  reasoning spec to build on; use native tool output'
+  guided_json_noncall_before_native_array_before_payload:
+    observation:
+      error:
+        code: legacy_unclassified
+        detail: 'initialize_request: muse_glimmer has no reasoning marker pair, so the guided-JSON path has no                  reasoning spec to build on; use native tool output'
   guided_json_orphan_reason_close_before_payload:
     observation:
       unavailable:
@@ -2326,4 +2336,22 @@ changes:
             text: done
         - expected: []
 metadata_changes: {}
-document_overrides: {}
+document_overrides:
+  guided_json_native_parameter_string_before_payload:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.3.2
+      capture_origin:
+        crate_version: 0.3.2
+        source_sha256: cfe2386719f0c6e0910a6477d2ed732a0c0633d64c820f29b07a1607627d3639
+        git_commit: c4b8f391e83af58781b024894b79620acd323389
+      inherited_from: null
+  guided_json_noncall_before_native_array_before_payload:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.3.2
+      capture_origin:
+        crate_version: 0.3.2
+        source_sha256: cfe2386719f0c6e0910a6477d2ed732a0c0633d64c820f29b07a1607627d3639
+        git_commit: c4b8f391e83af58781b024894b79620acd323389
+      inherited_from: null

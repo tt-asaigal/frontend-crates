@@ -328,6 +328,61 @@ changes:
         - expected: []
         - expected: []
         - expected: []
+  guided_json_native_parameter_string_before_payload:
+    observation:
+      value:
+        assembled:
+        - kind: text
+          text: '<think>literal</think><parameter=x>"[{\"name\":\"get_weather\",\"arguments\":{\"city\":\"Rome\"}}]"</parameter></function>[{"name": "get_weather", "arguments": {"city": "Paris"}}]'
+        chunks:
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: text
+            text: <think>literal</think>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: text
+            text: '<parameter=x>"[{\"name\":\"get_weather\",\"arguments\":{\"city\":\"Rome\"}}]"</parameter></function>[{"name": "get_weather", "arguments": {"city": "Paris"}}]'
+  guided_json_noncall_before_native_array_before_payload:
+    observation:
+      value:
+        assembled:
+        - kind: text
+          text: '{}<think>literal</think><parameter=x>[{"name":"get_weather","arguments":{"city":"Rome"}}]</parameter></function>[{"name": "get_weather", "arguments": {"city": "Paris"}}]'
+        chunks:
+        - expected:
+          - kind: text
+            text: '{}'
+        - expected:
+          - kind: text
+            text: <think>
+        - expected:
+          - kind: text
+            text: literal
+        - expected:
+          - kind: text
+            text: </think>
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: text
+            text: <parameter=x>[{"name":"get_weather","arguments":{"city":"Rome"}}]
+        - expected:
+          - kind: text
+            text: </parameter>
+        - expected:
+          - kind: text
+            text: </function>
+        - expected:
+          - kind: text
+            text: '[{"name": "get_weather", "arguments": {"city": "Paris"}}]'
+        - expected: []
   guided_json_orphan_reason_close_before_payload:
     observation:
       value:
@@ -1900,4 +1955,22 @@ changes:
           - kind: text
             text: done
 metadata_changes: {}
-document_overrides: {}
+document_overrides:
+  guided_json_native_parameter_string_before_payload:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.3.2
+      capture_origin:
+        crate_version: 0.3.2
+        source_sha256: cfe2386719f0c6e0910a6477d2ed732a0c0633d64c820f29b07a1607627d3639
+        git_commit: c4b8f391e83af58781b024894b79620acd323389
+      inherited_from: null
+  guided_json_noncall_before_native_array_before_payload:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.3.2
+      capture_origin:
+        crate_version: 0.3.2
+        source_sha256: cfe2386719f0c6e0910a6477d2ed732a0c0633d64c820f29b07a1607627d3639
+        git_commit: c4b8f391e83af58781b024894b79620acd323389
+      inherited_from: null

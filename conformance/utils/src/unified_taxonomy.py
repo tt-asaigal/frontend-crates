@@ -182,6 +182,22 @@ UNIFIED_TAX = {
     "gemma4_guided_json_malformed_call_prefix_before_reasoning": ("gemma", "2"),
     "glm47_parameterless_call_shape_inside_argument": ("glm5", "1"),
 
+    'guided_json_noncall_before_native_array_before_payload': (35, "8"),
+    'guided_json_native_parameter_string_before_payload': (35, "9"),
+    'gemma4_guided_response_extra_body_opener': ("gemma", "4"),
+    'gpt_oss_channel_header_variants': ("gpt_oss", "1"),
+    'gpt_oss_channel_first_tool_header': ("gpt_oss", "6"),
+    'gpt_oss_chat_template_tool_header': ("gpt_oss", "7"),
+    'gpt_oss_multiple_unknown_and_empty_tools': ("gpt_oss", "2"),
+    'gpt_oss_control_marker_inside_argument_string': ("gpt_oss", "3"),
+    'gpt_oss_truncated_tool_resynchronizes_at_next_message': ("gpt_oss", "4"),
+    'gpt_oss_truncated_tool_at_eof_is_dropped': ("gpt_oss", "5"),
+    'gpt_oss_interrupted_reasoning_then_tool': ("gpt_oss", "8"),
+    'gpt_oss_interrupted_reasoning_then_tool_with_text': ("gpt_oss", "9"),
+    'gpt_oss_invalid_tool_body_then_empty_call': ("gpt_oss", "10"),
+    'gpt_oss_invalid_tool_body_then_valid_call': ("gpt_oss", "11"),
+    'gpt_oss_interrupted_reasoning_then_response': ("gpt_oss", "12"),
+
     # Group 40 — Prefilled reasoning, happy
     "prefilled_reasoning_with_tool": (40, "1"), "prefilled_reasoning_with_guided_json": (40, "2"),
     "prefilled_reasoning_then_text_then_tool": (40, "3"), "prefilled_reasoning_then_text": (40, "4"),
@@ -267,6 +283,61 @@ def taxonomy_sort_key(scenario):
     return group_key, 10_000, sub
 
 
+GPT_OSS_PR424_REQUEST_VARIANTS = {
+    'arg_marker_in_string': True,
+    'deepseek_v41_mixed_control_text_in_string': True,
+    'guided_json_after_reasoning': True,
+    'guided_json_array_argument': False,
+    'guided_json_bare_tool_header_recovers_inside_a_thought': True,
+    'guided_json_escaped_string_args': False,
+    'guided_json_gt_in_argument_trailing_close': True,
+    'guided_json_gt_in_argument_wrapped': True,
+    'guided_json_invalid_call': False,
+    'guided_json_list_with_broken_element': False,
+    'guided_json_malformed_json': False,
+    'guided_json_marker_inside_argument': True,
+    'guided_json_named_tool': False,
+    'guided_json_narrated_invoke_in_reasoning': True,
+    'guided_json_narrated_prefix_inside_reasoning': True,
+    'guided_json_native_markup_only': True,
+    'guided_json_native_parameter_body_inside_reasoning': True,
+    'guided_json_orphan_reason_close_before_payload': True,
+    'guided_json_orphan_tool_close_before_payload': True,
+    'guided_json_partial_calls': False,
+    'guided_json_prose_before_reasoning': True,
+    'guided_json_quoted_bare_header_after_payload': True,
+    'guided_json_quoted_bare_header_in_answer': True,
+    'guided_json_reasoning_markers_inside_native_parameter': True,
+    'guided_json_required_tool': False,
+    'guided_json_schema_error_nameless_element_bare_opener': False,
+    'guided_json_schema_error_nameless_element_trailing_close': True,
+    'guided_json_schema_error_nameless_element_wrapped': True,
+    'guided_json_schema_error_not_a_call_trailing_close': True,
+    'guided_json_schema_error_not_a_call_wrapped': True,
+    'guided_json_stray_prefix_before_reasoning': True,
+    'guided_json_syntax_error_bare_opener': False,
+    'guided_json_syntax_error_trailing_close': True,
+    'guided_json_syntax_error_wrapped': True,
+    'guided_json_tool_close_after_payload': True,
+    'guided_json_two_calls': False,
+    'guided_json_unterminated_reasoning_then_wrapped_payload': True,
+    'guided_json_wrapped_in_tool_markup': True,
+    'guided_quoted_reasoning_closer_named': True,
+    'guided_quoted_reasoning_closer_required': True,
+    'prefilled_reasoning_with_guided_json': True,
+}
+
+for _scenario, _active in GPT_OSS_PR424_REQUEST_VARIANTS.items():
+    if not _active:
+        continue
+    _group, _sub = UNIFIED_TAX[_scenario]
+    _next_sub = max(
+        int(sub) for group, sub in UNIFIED_TAX.values()
+        if group == _group and sub.isdecimal()
+    ) + 1
+    UNIFIED_TAX[_scenario + "_pr424"] = (_group, str(_next_sub))
+
+
 def legacy_case_label(scenario):
     """Published numeric identity, retained for ordering and compatibility."""
     group, sub = tax(scenario)
@@ -280,6 +351,7 @@ GROUP_DESCRIPTION_PREFIXES = {
     "deepseek": ("deepseek_v41_",),
     "muse": ("muse_",),
     "dsml": ("dsml_",),
+    "gpt_oss": ("gpt_oss_",),
 }
 
 

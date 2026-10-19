@@ -1457,7 +1457,7 @@ def test_gpt_oss_uncaptured_peer_batch_results_are_missing_not_unsupported(model
     keys = {"vllm_python_batch@" + version for version in ("0.23.0", "0.24.0", "0.25.1", "0.26.0")}
     keys.add("sglang_python_batch@0.5.14")
     cases = [cell for cell in leaf_cells(row).values() if cell["status"] != "na"]
-    assert len(cases) == 204
+    assert len(cases) == 271
     assert leaf_cells(row)["tool_only"]["case_id"] == "UNIFIED.1-tool_only"
     missing = []
     for cell in cases:
@@ -1806,12 +1806,12 @@ def test_argument_sections_and_folds_preserve_all_authored_scenarios(model_v2):
     tab = _tab(model_v2, "tab-unified")
     sections = [group for group in tab["column_groups"] if group["key"].startswith("unified_g7_")]
     assert [group["label"] for group in sections] == list(ARGUMENT_SECTIONS.values())
-    assert [group["span"] for group in sections] == [3, 10, 6, 10, 17, 14]
+    assert [group["span"] for group in sections] == [5, 10, 6, 10, 17, 14]
     columns = [column for column in tab["columns"] if column["group_key"].startswith("unified_g7_")]
-    assert len(columns) == 60
-    assert [column["display_number"] for column in columns] == list(range(1, 61))
+    assert len(columns) == 62
+    assert [column["display_number"] for column in columns] == list(range(1, 63))
     expected = {scenario for scenario in unified_taxonomy.UNIFIED_TAX if unified_taxonomy.tax(scenario)[0] == 7}
-    assert len(expected) == 139
+    assert len(expected) == 141
     found = set()
     for row in tab["rows"]:
         if row.get("section"):

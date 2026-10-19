@@ -350,6 +350,80 @@ changes:
             name: get_weather
             arguments: '{"city": "Paris"}'
             complete: true
+  guided_json_native_parameter_string_before_payload:
+    observation:
+      value:
+        assembled:
+        - kind: text
+          text: to=selfliteral<atem:invoke name="f"><atem:parameter name="x">"[{\"name\":\"get_weather\",\"arguments\":{\"city\":\"Rome\"}}]"</atem:parameter></atem:invoke>
+        - kind: tool_call
+          name: get_weather
+          arguments:
+            city: Paris
+        chunks:
+        - expected:
+          - kind: text
+            text: to=self
+        - expected: []
+        - expected:
+          - kind: text
+            text: literal
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: text
+            text: <atem:invoke name="f"><atem:parameter name="x">"[{\"name\":\"get_weather\",\"arguments\":{\"city\":\"Rome\"}}]"
+        - expected:
+          - kind: text
+            text: </atem:parameter>
+        - expected:
+          - kind: text
+            text: </atem:invoke>
+        - expected:
+          - kind: tool_call
+            name: get_weather
+            arguments: '{"city": "Paris"}'
+            complete: true
+        - expected: []
+  guided_json_noncall_before_native_array_before_payload:
+    observation:
+      value:
+        assembled:
+        - kind: text
+          text: '{}to=selfliteral<atem:parameter name="x">'
+        - kind: tool_call
+          name: get_weather
+          arguments:
+            city: Rome
+        - kind: text
+          text: '</atem:parameter>[{"name": "get_weather", "arguments": {"city": "Paris"}}]'
+        chunks:
+        - expected:
+          - kind: text
+            text: '{}to=self'
+        - expected: []
+        - expected:
+          - kind: text
+            text: literal
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: text
+            text: <atem:parameter name="x">
+          - kind: tool_call
+            name: get_weather
+            arguments: '{"city":"Rome"}'
+            complete: true
+        - expected:
+          - kind: text
+            text: </atem:parameter>
+        - expected: []
+        - expected:
+          - kind: text
+            text: '[{"name": "get_weather", "arguments": {"city": "Paris"}}]'
+        - expected: []
   guided_json_orphan_reason_close_before_payload:
     observation:
       value:

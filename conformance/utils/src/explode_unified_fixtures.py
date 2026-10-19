@@ -25,13 +25,14 @@ import argparse
 import re
 import shutil
 import sys
+from functools import lru_cache
 from pathlib import Path
 
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from dynamo_version import validate_capture_provenance  # noqa: E402
-from capture_stimulus import capture_input  # noqa: E402
+from capture_stimulus import _without_synthetic_finish_step, capture_input  # noqa: E402
 from unified_taxonomy import numbered_id  # noqa: E402
 import unified_history  # noqa: E402
 
@@ -175,6 +176,30 @@ def _canonical_dynamo_capture_version(provenance):
     return provenance["crate_version"]
 
 
+def _request_stimulus(record, *, keep_finish_chunk):
+    """Keep authored model chunks separate from the parser's finish() step."""
+    request = capture_input(record)
+    return request if keep_finish_chunk else _without_synthetic_finish_step(request)
+
+
+@lru_cache(maxsize=None)
+def _historical_finish_chunks(family):
+    path = CONF / f"fixtures-unified-v2/families/{family}/inputs_and_golden.yaml"
+    historical = yaml.safe_load(path.read_text())
+    finish_chunks = {}
+    for case in historical["cases"].values():
+        request = case.get("request") or {}
+        chunks = request.get("chunks") or []
+        finish_chunks[case["scenario"]] = bool(
+            chunks and chunks[-1].get("delta_text") == "‹finish›"
+        )
+    return finish_chunks
+
+
+def _historical_finish_chunk(family, scenario):
+    return _historical_finish_chunks(family).get(scenario, True)
+
+
 def _split_only_cases(family, document):
     """Build input/GOLDEN rows for a family without a native Unified parser."""
     if document.get("family") != family or not isinstance(document.get("cases"), dict):
@@ -284,11 +309,9 @@ def main():
         cid = c["id"]
         key, fam, scenario = _case_key(cid)
         chunks = c.get("chunks") or []
-        request = capture_input(c)
-        # GPT-OSS's published split-era inputs represent EOF implicitly. The
-        # terminal observation still belongs in the capture, not in its stimulus.
-        if fam == "gpt_oss" and request["chunks"][-1:] == [{"delta_text": "‹finish›"}]:
-            request["chunks"].pop()
+        request = _request_stimulus(
+            c, keep_finish_chunk=_historical_finish_chunk(fam, scenario)
+        )
         active_cases[(fam, scenario)] = (key, request)
 
         slot("inputs", fam, model_label=fam)[key] = _input_case(
@@ -310,7 +333,7 @@ def main():
         }
 
         if c.get("dynamo_error"):
-            slot(ddir, fam)[key] = {"capture_input": capture_input(c), "error": c["dynamo_error"]}
+            slot(ddir, fam)[key] = {"capture_input": request, "error": c["dynamo_error"]}
 
         # peer engine overlays
         for impl in ("vllm_python", "vllm_rust", "sglang_python"):

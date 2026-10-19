@@ -81,7 +81,7 @@ Every active Unified ID uses `UNIFIED.<group>-<description>`, for example `UNIFI
 - **`3-text_only`** (`text_only`) Plain content, zero tool structure. No spurious call. This is also covered in: TOOLCALLING.streamv1.3. No e2e case has this shape: Qwen3.6 always emits a reasoning span, so the plain-content case is corpus-only.
 
 ### Group 4 — TC Malformed envelope
-- **`4-tool_block_never_closed_then_text`** (`tool_block_never_closed_then_text`) The calls opener arrives without its closing marker and prose follows. The prose remains inside the unterminated tool envelope and is discarded at EOF; it is not visible answer text. This is applicable to DSv4.1 because its native grammar has an explicit calls envelope.
+- **`4-tool_block_never_closed_then_text`** (`tool_block_never_closed_then_text`) The calls opener arrives without its closing marker and prose follows. The prose remains inside the unterminated tool envelope and is discarded at EOF; it is not visible answer text. This is applicable to DSv4.1 because its native grammar has an explicit calls envelope. The retained GPT-OSS request instead starts with an orphan handoff and never opens a tool message: its following prose remains visible. Genuine truncated Harmony messages have separate EOF and resynchronization cases.
 - **`4-tool_markup_only_emits_nothing`** (`tool_markup_only_emits_nothing`) A calls envelope contains no invocation. Both markers are control syntax and the parser emits no event.
 
 ### Group 5 — TC Truncation / recovery (TOOLCALLING.streamv1.5)
@@ -148,10 +148,10 @@ Every active Unified ID uses `UNIFIED.<group>-<description>`, for example `UNIFI
 - **`12-tool_in_reason_with_text`** (`tool_in_reason_with_text`) 12-2 WITH visible narration before and after — text → reason → call → reason → text. Golden breaks out and keeps the surrounding text; engines leak the nested markup. Class LEAK.
 
 ### DeepSeek V4.1 applicability
-- DeepSeek V4.1 uses the ordered Unified contract for native DSML calls, reasoning interleaving, guided JSON, and prefilled states. The current corpus emits 237 of the 280 taxonomy cases for this family.
+- DeepSeek V4.1 uses the ordered Unified contract for native DSML calls, reasoning interleaving, guided JSON, and prefilled states. The current corpus emits 241 of the 325 taxonomy cases for this family.
 - Generated cases include `30-guided_json_gt_in_argument_bare_opener`, the single-family `deepseek-json_invocation_body` case, applicable Guided Decoding cases in groups 31 through 35 (exclusions listed below), the marker-discriminating Response row `50-prefilled_response_reasoning_markers_literal`, and the 40-series cases `40-prefilled_reasoning_with_guided_json`, `40-native_quoted_control_in_reasoning`, and `40-native_single_quote_contraction_reasoning`, plus `41-prefilled_reasoning_redundant_opener` through `41-prefilled_reasoning_truncated`.
-- The 43 omitted cases are `35-guided_json_native_parameter_array_before_payload`, `35-guided_json_native_parameter_object_before_payload`, `35-guided_response_rejected_header_quote_ownership`, `40-prefilled_reasoning_then_text`, `40-prefilled_reasoning_then_text_then_tool`, `40-prefilled_reasoning_with_tool`, `7-arg_json_null_ref`, `7-arg_null_mixed_labels`, `7-arg_string_null_ref`, `deepseek_v4-deepseek_v4_guided_reasoning_opener_inside_native_body`, `gemma-guided_json_malformed_call_prefix_before_reasoning`, `gemma-guided_json_visible_call_prose_before_reasoning`, `gemma-guided_reasoning_opener_after_call_prefix`, `glm5-parameterless_call_shape_inside_argument`, `glm5-reference_type_intersection`, `kimi-elided_think_close_to_response`, `kimi-guided_native_wrapper`, `kimi-malformed_call_then_valid`, `kimi-message_end_after_response`, `kimi-raw_json_arguments`, `kimi-raw_json_eof`, `kimi-spaced_xtml_markers`, `kimi-typed_argument_values`, `kimi_k2-kimi_k2_optional_prefix_name_overlap`, `muse-glimmer_guided_message_end_inside_native_header`, `muse-guided_json_quoted_bare_tool_header_in_answer`, `muse-prefilled_response_guided_closer_inside_invoke_quote`, `muse-quoted_reserved_eom_argument`, `muse-quoted_reserved_eot_argument`, `muse-quoted_reserved_start_argument`, `muse-unterminated_parameter_then_empty_call`, `muse-unterminated_parameter_then_call`, `qwen3-qwen3_guided_non_ascii_header_in_closed_reasoning`, `qwen3-qwen3_guided_non_ascii_header_in_truncated_reasoning`, `qwen3-qwen3_guided_reasoning_opener_inside_native_header`, `gpt_oss-harmony_guided_json_gt_in_argument_bare_opener`, `gpt_oss-harmony_guided_json_gt_in_argument_named_bare_opener`, `gpt_oss-harmony_guided_json_narrated_prefix_inside_reasoning`, `gpt_oss-harmony_guided_json_schema_error_nameless_element_bare_opener`, `gpt_oss-harmony_guided_json_schema_error_not_a_call_bare_opener`, `gpt_oss-harmony_guided_json_stray_prefix_before_reasoning`, `gpt_oss-harmony_guided_json_syntax_error_bare_opener`, `gpt_oss-harmony_guided_json_tool_open_before_payload`.
-- The GPT-OSS, Kimi, Gemma, GLM, Muse, and Qwen3 rows require family-specific grammar or schema behavior. `deepseek_v4-deepseek_v4_guided_reasoning_opener_inside_native_body` and `35-guided_response_rejected_header_quote_ownership` are scoped to other grammar owners; the two `35-guided_json_native_parameter_*` cases are scoped to Muse and Qwen3. The three omitted 40-series rows are excluded as redundant with `reason_then_tool`, `interstitial_text`, and `reason_then_content`. `50-prefilled_response_reasoning_markers_literal` proves that Response treats reasoning markers as visible text. The `muse-guided_json_quoted_bare_tool_header_in_answer` duplicate does not imply that quoted or malformed model output cannot occur.
+- The 84 omitted cases require another family's framing or schema, or repeat a transition already covered for DeepSeek V4.1. Family applicability comes from `scenario_families()` and the serialized request. Family-specific grammars and schemas require explicit exclusions; Response-prefilled native object, array, and string ownership now cover each applicable native family. Prefilled rows that duplicate another state transition remain excluded for DeepSeek V4.1.
+
 - `30-guided_json_gt_in_argument_bare_opener` retains the historical bare header with no tool name. `34-guided_json_narrated_invoke_in_reasoning` uses an unfinished DSML invoke header inside reasoning rather than a completed calls-block opener.
 
 <!-- TODO: Verify the historical aliases for the 14 cases deferred from PR #232 after the taxonomy merge: 1-2, 30-14, 31-31 through 31-40, and 50-1/2. Preserve their historical IDs. -->
@@ -331,7 +331,9 @@ Groups 1–12 vary the model OUTPUT. Groups 30–39 vary Guided Decoding request
 
 `31-guided_json_invalid_call` through `31-guided_json_list_with_broken_element` are malformed PAYLOADS. `32-guided_json_tool_open_before_payload` through `32-guided_json_orphan_tool_close_before_payload` are well-formed payloads in malformed SURROUNDINGS: they recover the markers, the payload then parses, and the call dispatches — so neither the all-or-nothing rule nor that warning applies to them.
 
-**Peer-engine value here is intentionally limited.** The base vLLM captures do not exercise the serialized guided request configuration. Historical Dynamo captures use the tagged parser and apply `init` when its API supports it; older APIs and split-only paths record unsupported initialization as unavailable instead of capturing the default mode under a guided label. Backfill overlays add results or explicit limitations for current cases without rewriting the original release shard.
+**Peer-engine value here is intentionally limited.** The base vLLM captures do not exercise the serialized guided request configuration. Historical backfills use tagged release sources when no producer fingerprint was retained, or sources that match a retained producer fingerprint, including verified source reconstructions. They apply `init` when the API supports it; missing sources and unsupported initialization remain explicitly unavailable. Backfills append observations without rewriting recorded results.
+
+The shared `35-guided_json_native_parameter_object_before_payload`, `35-guided_json_native_parameter_array_before_payload`, `35-guided_json_native_parameter_string_before_payload`, and `35-guided_json_noncall_before_native_array_before_payload` cases place native argument data before the real guided call. Only the final Paris call dispatches. These cases test lexical ownership, including arguments that do not satisfy the offered native schema. A preceding non-call JSON value remains visible without releasing later native arguments to the guided scanner.
 
 ### Group 40 — Prefilled reasoning, happy
 - **`40-prefilled_reasoning_with_tool`** (`prefilled_reasoning_with_tool`) Stream begins inside a thought, closes it, calls a tool.
@@ -440,11 +442,11 @@ The check is the count: if a review round produced N defects the corpus missed a
 
 ## Shared schema conformance probes
 
-Expected values are authored in `conformance/utils/src/glm47_schema_cases.json`, independently of parser captures. `schema_cases.py` owns behavior classification; `unified_taxonomy.py` uses it for report sections and ordering. Group 7 has 60 visible entries covering 139 scenarios. Display numbers are ranks; fixture IDs and historical aliases stay unchanged.
+Expected values are authored in `conformance/utils/src/glm47_schema_cases.json`, independently of parser captures. `schema_cases.py` owns behavior classification; `unified_taxonomy.py` uses it for report sections and ordering. Group 7 has 62 visible entries covering 141 scenarios. Display numbers are ranks; fixture IDs and historical aliases stay unchanged.
 
 | Behavior section | Visible entries |
 |---|---:|
-| Text preservation | 3 |
+| Text preservation | 5 |
 | Declared types and enums | 10 |
 | Type arrays and null interpretation | 6 |
 | String constants | 10 |
@@ -479,8 +481,7 @@ Harmony separates the role, channel and body with different control tokens.
 The shared guided-prefix scenarios already cover the corresponding boundaries
 in every other native family. These eight variants require Harmony's separate
 message delimiter and channel header; they therefore apply only to GPT-OSS.
-The previous GPT-OSS projections of these scenarios had an empty header or an
-orphan handoff. Their captured requests and goldens remain retired in history.
+Published requests and checkpoint observations remain intact. Applicable earlier requests are retained alongside the partial-header cases; `_pr424` variants preserve distinct argument bytes, complete headers, and authored chunk schedules from #424 when a shared scenario ID already belongs to #434.
 
 - `harmony_guided_json_gt_in_argument_bare_opener`: a JSON argument containing `>` settles a partial header.
 - `harmony_guided_json_gt_in_argument_named_bare_opener`: the same boundary after a recipient name.
@@ -495,3 +496,5 @@ GPT-OSS also authors the existing shared `arg_marker_in_string` and
 `deepseek_v41_mixed_control_text_in_string` cases with Harmony control spellings.
 Literal spellings supplied as ordinary tokens, rather than actual control-token
 IDs, have independent native Rust streaming coverage.
+
+GPT-OSS cases also cover channel-first and template tool headers, unknown and empty tools, control spellings inside argument strings, interrupted reasoning, invalid tool bodies followed by another call, and truncated messages at EOF or before resynchronization. Native arguments still stream before handoff; the legacy tool projection and the Unified parser share the runtime.

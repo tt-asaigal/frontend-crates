@@ -55,8 +55,16 @@ def test_exact_fold_dimensions_and_section_order():
         assert parent in {scenario for scenario, _ in children}
     ordered = sorted((scenario for scenario in taxonomy.UNIFIED_TAX if taxonomy.tax(scenario)[0] == 7),
                      key=taxonomy.display_sort_key)
-    assert len(ordered) == 139
+    assert len(ordered) == 141
     assert list(dict.fromkeys(argument_section(s) for s in ordered)) == list(ARGUMENT_SECTIONS)
+
+
+def test_request_variants_keep_the_parent_argument_section():
+    variants = [scenario for scenario in taxonomy.UNIFIED_TAX
+                if scenario.endswith("_pr424") and taxonomy.tax(scenario)[0] == 7]
+    assert variants
+    for scenario in variants:
+        assert argument_section(scenario) == argument_section(scenario.removesuffix("_pr424"))
 
 
 def test_folded_serialization_preserves_leaves_and_schema_associations():
