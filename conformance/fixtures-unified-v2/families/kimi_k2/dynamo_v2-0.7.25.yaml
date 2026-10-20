@@ -5,6 +5,27 @@ provenance:
 document:
   mode: unified
 changes:
+  gpt_oss_tool_body_whitespace:
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: lookup
+          arguments:
+            q: x
+        chunks:
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: lookup
+            arguments: '{"q":"x"}'
+            complete: true
+        - expected: []
+        - expected: []
   guided_json_native_parameter_array_before_payload:
     observation:
       value:
@@ -277,6 +298,11 @@ metadata_changes:
       tool_output_mode: Native
       named_tool: null
   glm_ref_scalar_types:
+    init:
+      starting_state: None
+      tool_output_mode: Native
+      named_tool: null
+  gpt_oss_tool_body_whitespace:
     init:
       starting_state: None
       tool_output_mode: Native
@@ -1357,6 +1383,15 @@ metadata_changes:
       tool_output_mode: Native
       named_tool: null
 document_overrides:
+  gpt_oss_tool_body_whitespace:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.25
+      capture_origin:
+        crate_version: 0.7.25
+        source_sha256: 4b8e5f76682c717b7992c60d25ac6f0d58233dd5595acf338e1f303c35743180
+        git_commit: 460586046cd45f271b9fa8a904ab9af91220d2e9
+      inherited_from: null
   guided_json_native_parameter_array_before_payload:
     capture_provenance:
       captured_with:

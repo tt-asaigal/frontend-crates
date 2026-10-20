@@ -47,6 +47,24 @@ changes:
       unavailable:
         code: legacy_unclassified
         detail: no reasoning parser registered for muse_glimmer
+  gpt_oss_quoted_message_header_literal:
+    case_key: UNIFIED.gpt_oss-quoted_message_header_literal
+    stimulus:
+      ref: current
+      semantic_sha256: a695672e0f73e26890ed299f73ca143524104bc63d9bec3dd06df30a4245d250
+    observation:
+      unavailable:
+        code: legacy_unclassified
+        detail: 'split parser muse_glimmer: no Dynamo parser v2 for family ''muse_glimmer'''
+  gpt_oss_quoted_truncated_tool_then_final:
+    case_key: UNIFIED.gpt_oss-quoted_truncated_tool_then_final
+    stimulus:
+      ref: current
+      semantic_sha256: 827b69565f95f705d7073654f23b741d71bac21b3d1f9c429563007a544ff26a
+    observation:
+      unavailable:
+        code: legacy_unclassified
+        detail: 'split parser muse_glimmer: no Dynamo parser v2 for family ''muse_glimmer'''
   guided_json_after_reasoning:
     case_key: UNIFIED.30.f
     stimulus:
@@ -1330,6 +1348,16 @@ metadata_changes:
       tool_output_mode: Native
       named_tool: null
   empty_args:
+    init:
+      starting_state: None
+      tool_output_mode: Native
+      named_tool: null
+  gpt_oss_quoted_message_header_literal:
+    init:
+      starting_state: None
+      tool_output_mode: Native
+      named_tool: null
+  gpt_oss_quoted_truncated_tool_then_final:
     init:
       starting_state: None
       tool_output_mode: Native

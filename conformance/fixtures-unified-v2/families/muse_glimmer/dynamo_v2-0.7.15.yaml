@@ -7,6 +7,62 @@ provenance:
 document:
   mode: unified
 changes:
+  gpt_oss_quoted_message_header_literal:
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: lookup
+          arguments:
+            q: <|eom|><|start|>assistant to=user<|message|>literal<|eom|>
+        chunks:
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: lookup
+            arguments: '{"q":"<|eom|><|start|>assistant to=user<|message|>literal<|eom|>"}'
+            complete: true
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+  gpt_oss_quoted_truncated_tool_then_final:
+    observation:
+      value:
+        assembled:
+        - kind: text
+          text: Answer
+        chunks:
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: text
+            text: Answer
   guided_json_native_parameter_string_before_payload:
     observation:
       value:
@@ -124,6 +180,16 @@ changes:
   native_unmatched_quote_then_call:
     absent: true
 metadata_changes:
+  gpt_oss_quoted_message_header_literal:
+    init:
+      starting_state: None
+      tool_output_mode: Native
+      named_tool: null
+  gpt_oss_quoted_truncated_tool_then_final:
+    init:
+      starting_state: None
+      tool_output_mode: Native
+      named_tool: null
   guided_json_native_parameter_string_before_payload:
     init:
       starting_state: Response

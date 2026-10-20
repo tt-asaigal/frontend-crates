@@ -3062,7 +3062,7 @@ EDGE.append(_structured_response_case())
 
 
 _GPT_OSS_REVIEW_CASES = (
-    ("gpt_oss_tool_body_whitespace", "Harmony native function message body starts with whitespace after the message marker. Cursor offsets must use the same raw-body coordinates as completion.",
+    ("gpt_oss_tool_body_whitespace", "A native JSON argument body begins with space, newline, and tab. Structural whitespace must not change cursor offsets or argument values.",
      '<|start|>assistant<|channel|>commentary to=functions.lookup <|constrain|>json<|message|> \n\t{"q":"x"}<|call|>',
      [{"kind":"tool_call", "name":"lookup", "arguments":{"q":"x"}}]),
     ("gpt_oss_constrained_final_header", "Harmony final header has a content type and no recipient. The JSON body stays visible response content; it is not a routed tool message.",
@@ -3071,21 +3071,73 @@ _GPT_OSS_REVIEW_CASES = (
     ("gpt_oss_implicit_recipient_first_header", "Harmony generated suffix begins with the recipient before its channel, without prompt token IDs. Hold the header until its message marker and dispatch the native call without leaking the recipient.",
      ' to=functions.lookup<|channel|>commentary <|constrain|>json<|message|>{"q":"x"}<|call|>',
      [{"kind":"tool_call", "name":"lookup", "arguments":{"q":"x"}}]),
-    ("gpt_oss_quoted_truncated_tool_then_final", "Harmony native arguments have an unterminated string before a handoff and a later complete assistant final message. At EOF discard the malformed call and recover the final answer.",
+    ("gpt_oss_quoted_truncated_tool_then_final", "A malformed native argument body precedes a complete visible-response message. At EOF discard the malformed call and recover the response without leaking its argument body.",
      '<|start|>assistant to=functions.lookup <|constrain|>json<|message|>{"q":"abc<|call|><|start|>assistant<|channel|>final<|message|>Answer<|return|>',
      [{"kind":"text", "text":"Answer"}]),
-    ("gpt_oss_quoted_message_header_literal", "A valid Harmony argument string quotes a handoff and complete assistant final header. JSON ownership keeps the quoted header literal; this is the valid counterfactual to malformed-string recovery.",
+    ("gpt_oss_quoted_message_header_literal", "A native argument value contains a call or message closer followed by a complete visible-response header. Argument ownership keeps that adjacent header literal instead of routing its body as visible text.",
      '<|start|>assistant to=functions.lookup<|message|>{"q":"<|call|><|start|>assistant<|channel|>final<|message|>literal<|return|>"}<|call|>',
      [{"kind":"tool_call", "name":"lookup", "arguments":{"q":"<|call|><|start|>assistant<|channel|>final<|message|>literal<|return|>"}}]),
     ("gpt_oss_complete_alternate_message_ends", "Harmony native function messages contain complete JSON and end with message-end or turn-end instead of handoff. Unified recovers both delimiter-complete calls; legacy missing-handoff behavior remains separate.",
      '<|start|>assistant to=functions.lookup<|message|>{"q":"end"}<|end|><|start|>assistant to=functions.lookup<|message|>{"q":"return"}<|return|>',
      [{"kind":"tool_call", "name":"lookup", "arguments":{"q":"end"}}, {"kind":"tool_call", "name":"lookup", "arguments":{"q":"return"}}]),
 )
+
+
+def _native_review_variants(scenario):
+    arguments = {"q": "x"}
+    if scenario == "gpt_oss_tool_body_whitespace":
+        golden = [{"kind": "tool_call", "name": "lookup", "arguments": arguments}]
+        return {
+            "kimi_k2": (
+                r_tool_arguments("kimi_k2", "lookup", arguments, 0).replace(
+                    "<|tool_call_argument_begin|>", "<|tool_call_argument_begin|> \n\t", 1
+                ), golden, M,
+            ),
+            "kimi_k3": (k3_raw_tool("lookup", ' \n\t{"q":"x"}'), golden, M),
+        }
+    if scenario == "gpt_oss_quoted_truncated_tool_then_final":
+        golden = [{"kind": "text", "text": "Answer"}]
+        return {
+            "muse_glimmer": (
+                '<|start|>assistant to=lookup<|message|><atem:invoke name="lookup">'
+                '<atem:parameter name="q">abc<|eom|>' + r_text("muse_glimmer", "Answer"),
+                golden, M,
+            ),
+            "kimi_k3": (
+                k3_raw_tool("lookup", '{"q":"abc') + r_text("kimi_k3", "Answer"),
+                golden, D("LOSS", "An unterminated raw JSON string swallows the later response; retain the visible-answer oracle."),
+            ),
+        }
+    if scenario == "gpt_oss_quoted_message_header_literal":
+        variants = {}
+        for family in ("muse_glimmer", "kimi_k3"):
+            closer = "<|eom|>" if family == "muse_glimmer" else k3_close("call")
+            payload = closer + r_text(family, "literal")
+            arguments = {"q": payload}
+            native_input = (
+                r_tool_arguments(family, "lookup", arguments, 0)
+                if family == "muse_glimmer"
+                else k3_raw_tool("lookup", json.dumps(arguments))
+            )
+            variants[family] = (native_input, [
+                {"kind": "tool_call", "name": "lookup", "arguments": arguments},
+            ], M)
+        return variants
+    return {}
+
+
 for _name, _description, _input, _golden in _GPT_OSS_REVIEW_CASES:
+    _variants = _native_review_variants(_name)
+    _inputs = OnlyFamilies({"gpt_oss": (_input, D("UNSUPPORTED", VLLM_UNCAPTURABLE["gpt_oss"]), M)})
+    _inputs.update({family: (native_input, D("UNSUPPORTED", "No peer capture recorded."), dynamo, golden)
+                    for family, (native_input, golden, dynamo) in _variants.items()})
+    _tools = {"gpt_oss": [], **{family: [{"name": "lookup", "parameters": {
+        "type": "object", "properties": {"q": {"type": "string"}},
+    }}] for family in _variants}}
     EDGE.append((
         _name, _description, ["I3", "I5", "I7"], _golden,
         {"starting_state":"None", "tool_output_mode":"Native", "named_tool":None},
-        OnlyFamilies({"gpt_oss": (_input, D("UNSUPPORTED", VLLM_UNCAPTURABLE["gpt_oss"]), M)}),
+        {"finish_reason": "stop"}, _inputs, _tools,
     ))
 
 

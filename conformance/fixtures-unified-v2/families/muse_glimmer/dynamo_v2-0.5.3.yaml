@@ -2440,4 +2440,22 @@ changes:
         - expected: []
         - expected: []
 metadata_changes: {}
-document_overrides: {}
+document_overrides:
+  gpt_oss_quoted_message_header_literal:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.5.3
+      capture_origin:
+        crate_version: 0.5.3
+        source_sha256: 09db832ab96f8b2e91060f24916df62f2e55653449e51e9a145841e75c6fcb1e
+        git_commit: f04f28c984c4200f51671cadf63e3b53c16c28ea
+      inherited_from: null
+  gpt_oss_quoted_truncated_tool_then_final:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.5.3
+      capture_origin:
+        crate_version: 0.5.3
+        source_sha256: 09db832ab96f8b2e91060f24916df62f2e55653449e51e9a145841e75c6fcb1e
+        git_commit: f04f28c984c4200f51671cadf63e3b53c16c28ea
+      inherited_from: null

@@ -132,6 +132,30 @@ changes:
             arguments: '{}'
             terminal_metadata_unavailable: this build has no ToolCallDelta::complete
         - expected: []
+  gpt_oss_tool_body_whitespace:
+    case_key: UNIFIED.gpt_oss-tool_body_whitespace
+    stimulus:
+      ref: current
+      semantic_sha256: 89c2e54cfb64861d55559d9376611e349b35c4e5b01029a9a899d7c3dbc9dec3
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: lookup
+          arguments:
+            q: x
+        chunks:
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: lookup
+            arguments: '{"q":"x"}'
+            terminal_metadata_unavailable: this build has no ToolCallDelta::complete
+        - expected: []
   guided_json_after_reasoning:
     case_key: UNIFIED.30.f
     stimulus:
@@ -2061,6 +2085,11 @@ metadata_changes:
       starting_state: None
       tool_output_mode: Native
       named_tool: null
+  gpt_oss_tool_body_whitespace:
+    init:
+      starting_state: None
+      tool_output_mode: Native
+      named_tool: null
   guided_json_after_reasoning:
     init:
       starting_state: None
@@ -2547,6 +2576,15 @@ metadata_changes:
       tool_output_mode: Native
       named_tool: null
 document_overrides:
+  gpt_oss_tool_body_whitespace:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.1.23
+      capture_origin:
+        crate_version: 0.1.23
+        source_sha256: 39556a0ed199e16432022d545345590ca1252c68d04fe9076db1df4cd2221878
+        git_commit: c8f61cc959371c0fea993b920e3a097e86c6d05b
+      inherited_from: null
   guided_json_native_parameter_array_before_payload:
     capture_provenance:
       captured_with:

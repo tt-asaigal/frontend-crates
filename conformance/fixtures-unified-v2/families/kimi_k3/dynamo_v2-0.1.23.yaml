@@ -47,6 +47,33 @@ changes:
       unavailable:
         code: legacy_unclassified
         detail: no reasoning parser registered for kimi_k3
+  gpt_oss_quoted_message_header_literal:
+    case_key: UNIFIED.gpt_oss-quoted_message_header_literal
+    stimulus:
+      ref: current
+      semantic_sha256: a3b2ac33fc2960233c009bdb6f58ee860113e13cec930912fe4a34cd774ab23a
+    observation:
+      unavailable:
+        code: legacy_unclassified
+        detail: 'split parser kimi_k3: no Dynamo parser v2 for family ''kimi_k3'''
+  gpt_oss_quoted_truncated_tool_then_final:
+    case_key: UNIFIED.gpt_oss-quoted_truncated_tool_then_final
+    stimulus:
+      ref: current
+      semantic_sha256: 7af1d3052ddd010a8e795d132fa7c5cbfcd9fadcf8c63449c2ffb013897ada0d
+    observation:
+      unavailable:
+        code: legacy_unclassified
+        detail: 'split parser kimi_k3: no Dynamo parser v2 for family ''kimi_k3'''
+  gpt_oss_tool_body_whitespace:
+    case_key: UNIFIED.gpt_oss-tool_body_whitespace
+    stimulus:
+      ref: current
+      semantic_sha256: 58ec57188fc27f1a56bace40c236f8dd030b205fdebab7dac79fb611581d7a12
+    observation:
+      unavailable:
+        code: legacy_unclassified
+        detail: 'split parser kimi_k3: no Dynamo parser v2 for family ''kimi_k3'''
   guided_json_after_reasoning:
     case_key: UNIFIED.30.f
     stimulus:
@@ -1140,6 +1167,21 @@ metadata_changes:
       tool_output_mode: Native
       named_tool: null
   empty_args:
+    init:
+      starting_state: None
+      tool_output_mode: Native
+      named_tool: null
+  gpt_oss_quoted_message_header_literal:
+    init:
+      starting_state: None
+      tool_output_mode: Native
+      named_tool: null
+  gpt_oss_quoted_truncated_tool_then_final:
+    init:
+      starting_state: None
+      tool_output_mode: Native
+      named_tool: null
+  gpt_oss_tool_body_whitespace:
     init:
       starting_state: None
       tool_output_mode: Native

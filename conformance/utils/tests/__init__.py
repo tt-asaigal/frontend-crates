@@ -5,10 +5,7 @@ GPT_OSS_STANDALONE_HEADER_SCENARIOS = frozenset({
     "gpt_oss_channel_header_variants",
     "gpt_oss_channel_first_tool_header",
     "gpt_oss_chat_template_tool_header",
-    "gpt_oss_tool_body_whitespace",
     "gpt_oss_constrained_final_header",
     "gpt_oss_implicit_recipient_first_header",
-    "gpt_oss_quoted_truncated_tool_then_final",
-    "gpt_oss_quoted_message_header_literal",
     "gpt_oss_complete_alternate_message_ends",
 })

@@ -369,6 +369,9 @@ SHARED_CASE_VARIANTS = {
     "kimi_k3_elided_think_close_to_response": ("reason_then_content", "Elided Kimi K3 reasoning close"),
     "gpt_oss_invalid_tool_body_then_empty_call": ("malformed_json_then_two_valid_calls", "Invalid text then empty call"),
     "gpt_oss_invalid_tool_body_then_valid_call": ("malformed_json_then_two_valid_calls", "Truncated JSON then valid call"),
+    "gpt_oss_tool_body_whitespace": ("tool_only", "Leading JSON body whitespace"),
+    "gpt_oss_quoted_truncated_tool_then_final": ("tool_no_close", "Malformed argument then visible response"),
+    "gpt_oss_quoted_message_header_literal": ("arg_marker_in_string", "Quoted closer and response header"),
 }
 _SHARED_VARIANT_PARENTS = {parent for parent, _ in SHARED_CASE_VARIANTS.values()}
 

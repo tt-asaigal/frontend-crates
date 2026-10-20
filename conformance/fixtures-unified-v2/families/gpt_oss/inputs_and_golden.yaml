@@ -9564,7 +9564,7 @@ cases:
   gpt_oss_quoted_message_header_literal:
     lifecycle: active
     scenario: gpt_oss_quoted_message_header_literal
-    description: A valid Harmony argument string quotes a handoff and complete assistant final header. JSON ownership keeps the quoted header literal; this is the valid counterfactual to malformed-string recovery.
+    description: A native argument value contains a call or message closer followed by a complete visible-response header. Argument ownership keeps that adjacent header literal instead of routing its body as visible text.
     policy:
     - I3
     - I5
@@ -9604,7 +9604,7 @@ cases:
   gpt_oss_quoted_truncated_tool_then_final:
     lifecycle: active
     scenario: gpt_oss_quoted_truncated_tool_then_final
-    description: Harmony native arguments have an unterminated string before a handoff and a later complete assistant final message. At EOF discard the malformed call and recover the final answer.
+    description: A malformed native argument body precedes a complete visible-response message. At EOF discard the malformed call and recover the response without leaking its argument body.
     policy:
     - I3
     - I5
@@ -9642,7 +9642,7 @@ cases:
   gpt_oss_tool_body_whitespace:
     lifecycle: active
     scenario: gpt_oss_tool_body_whitespace
-    description: Harmony native function message body starts with whitespace after the message marker. Cursor offsets must use the same raw-body coordinates as completion.
+    description: A native JSON argument body begins with space, newline, and tab. Structural whitespace must not change cursor offsets or argument values.
     policy:
     - I3
     - I5

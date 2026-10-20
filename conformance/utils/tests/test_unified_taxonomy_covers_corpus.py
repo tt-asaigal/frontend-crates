@@ -899,9 +899,9 @@ def test_unified_case_counts_match_the_generator():
         "gemma4": 125,
         "glm47": 123,
         "gpt_oss": 164,
-        "kimi_k2": 122,
-        "kimi_k3": 129,
-        "muse_glimmer": 129,
+        "kimi_k2": 123,
+        "kimi_k3": 132,
+        "muse_glimmer": 131,
         "qwen3": 126,
     }
     assert set(family_specific) == set(FAMILIES)
@@ -1208,6 +1208,12 @@ def _family_value(scenario, family):
                 else f"{reason_open}reconsider{reason_close}")
     if scenario == "guided_json_marker_inside_argument":
         return reason_close
+    if scenario == "gpt_oss_quoted_message_header_literal":
+        return {
+            "gpt_oss": "<|call|><|start|>assistant<|channel|>final<|message|>literal<|return|>",
+            "muse_glimmer": "<|eom|><|start|>assistant to=user<|message|>literal<|eom|>",
+            "kimi_k3": "<|close|>call<|sep|><|open|>response<|sep|>literal<|close|>response<|sep|>",
+        }[family]
     quoted = {
         "guided_json_quoted_bare_header_in_answer": "self",
         "guided_json_quoted_bare_tool_header_in_answer": "get_weather",
@@ -1440,7 +1446,8 @@ def _native_input_calls(family, raw):
         elif family == "gemma4":
             arguments, _ = _parse_gemma_value("{" + body)
         elif family == "kimi_k2":
-            arguments, _ = json.JSONDecoder().raw_decode(body)
+            start = len(body) - len(body.lstrip(" \t\r\n"))
+            arguments, _ = json.JSONDecoder().raw_decode(body, start)
         else:
             pattern = r'<\|open\|>\s*argument key="([^"]+)" type="([^"]+)"\s*<\|sep\|>(.*?)<\|close\|>\s*argument\s*<\|sep\|>'
             for key, kind, value in re.findall(pattern, body, re.S):
@@ -1511,6 +1518,15 @@ def test_kimi_k2_fixture_projection_preserves_optional_prefix_names(header, name
 def test_kimi_k2_fixture_projection_rejects_an_empty_name():
     raw = "<|tool_call_begin|>:17<|tool_call_argument_begin|>{}<|tool_call_end|>"
     assert _native_input_calls("kimi_k2", raw) == []
+
+
+def test_kimi_k2_fixture_projection_skips_framing_whitespace_without_trimming_values():
+    value = " \n\tinside \r\n"
+    body = json.dumps({"q": value})
+    raw = "<|tool_call_begin|>functions.lookup:0<|tool_call_argument_begin|> \n\t" + body + "<|tool_call_end|>"
+    assert _native_input_calls("kimi_k2", raw) == [
+        {"kind": "tool_call", "name": "lookup", "arguments": {"q": value}},
+    ]
 
 
 def _assert_malformed_recovery(family, case):
@@ -1689,6 +1705,8 @@ def _assert_cross_family_contract(corpus):
                 init["starting_state"] = "None"
             events = (_assert_malformed_recovery(family, case) if scenario == "malformed_json_then_two_valid_calls"
                       else _logical_events(scenario, family, case["golden"]))
+            if scenario == "gpt_oss_quoted_truncated_tool_then_final":
+                assert events == [{"kind": "text", "text": "Answer"}], (family, scenario, "missing recovered answer")
             if scenario == "structured_response_after_reasoning":
                 # Compare the schema and invalid payloads after checking each
                 # native envelope; Harmony generates headers, others prefill.
@@ -1826,8 +1844,11 @@ def test_cross_family_contract_rejects_prose_only_recipient_case(family):
     "input_argument_key", "input_reasoning_prose", "marker_role", "missing_event",
     "named_tool", "starting_state", "output_mode", "input_value",
     "guided_array_value", "argument_marker_role", "input_call_order",
+    "quoted_response_header", "quoted_response_payload", "missing_recovered_answer",
 ])
 def test_cross_family_contract_rejects_single_family_mutations(family, mutation):
+    if mutation in {"quoted_response_header", "quoted_response_payload", "missing_recovered_answer"} and family not in {"gpt_oss", "muse_glimmer", "kimi_k3"}:
+        pytest.skip("this family has no applicable framed-response specimen")
     corpus = {family: build_cases(family) for family in NATIVE_FAMILIES}
     _assert_cross_family_contract(corpus)
     case = corpus[family][f"UNIFIED.reason_then_tool.{family}"]
@@ -1876,6 +1897,19 @@ def test_cross_family_contract_rejects_single_family_mutations(family, mutation)
         wrong = f"git log {control_tokens(family)[1]} --oneline"
         case["input"] = case["input"].replace(value, wrong)
         case["golden"][0]["arguments"]["cmd"] = wrong
+    elif mutation in {"quoted_response_header", "quoted_response_payload"}:
+        scenario = "gpt_oss_quoted_message_header_literal"
+        case = corpus[family][f"UNIFIED.{scenario}.{family}"]
+        value = case["golden"][0]["arguments"]["q"]
+        header = {"gpt_oss": "final", "muse_glimmer": "user", "kimi_k3": "response"}[family]
+        wrong = value.replace(header, "wrong") if mutation == "quoted_response_header" else value.replace("literal", "changed")
+        case["input"] = case["input"].replace(value, wrong)
+        case["golden"][0]["arguments"]["q"] = wrong
+        with pytest.raises(AssertionError, match="wrong marker role or payload"):
+            _logical_events(scenario, family, case["golden"])
+    elif mutation == "missing_recovered_answer":
+        case = corpus[family][f"UNIFIED.gpt_oss_quoted_truncated_tool_then_final.{family}"]
+        case["golden"] = []
     else:
         case = corpus[family][f"UNIFIED.two_calls.{family}"]
         segments = next(row[3] for row in CLEAN if row[0] == "two_calls")
@@ -1984,6 +2018,44 @@ def test_gpt_oss_variants_use_shared_parents_or_explicit_header_grammar(scenario
         assert scenario in GPT_OSS_STANDALONE_HEADER_SCENARIOS
         assert taxonomy.display_tax(scenario)[0] == "gpt_oss"
     assert taxonomy.scenario_for_label(numbered_id(scenario), scenario=scenario) == scenario
+
+
+@pytest.mark.parametrize(("scenario", "parent", "families"), [
+    ("gpt_oss_tool_body_whitespace", "tool_only", {"gpt_oss", "kimi_k2", "kimi_k3"}),
+    ("gpt_oss_quoted_truncated_tool_then_final", "tool_no_close", {"gpt_oss", "muse_glimmer", "kimi_k3"}),
+    ("gpt_oss_quoted_message_header_literal", "arg_marker_in_string", {"gpt_oss", "muse_glimmer", "kimi_k3"}),
+])
+def test_retained_harmony_review_ids_cover_native_shared_variants(scenario, parent, families):
+    assert G.scenario_families(scenario) == families
+    assert taxonomy.case_fold(scenario)[0] == parent
+    assert taxonomy.display_tax(scenario)[0] == taxonomy.display_tax(parent)[0]
+    assert scenario not in GPT_OSS_STANDALONE_HEADER_SCENARIOS
+    for family in families - {"gpt_oss"}:
+        case = build_cases(family)[f"UNIFIED.{scenario}.{family}"]
+        assert "Harmony" not in case["description"]
+        assert case["init"] == {"starting_state": "None", "tool_output_mode": "Native", "named_tool": None}
+        if parent == "tool_no_close":
+            assert case["golden"] == [{"kind": "text", "text": "Answer"}]
+            if family == "muse_glimmer":
+                assert '<atem:parameter name="q">abc<|eom|>' in case["input"]
+                assert "</atem:parameter>" not in case["input"]
+            else:
+                assert '{"q":"abc<|close|>json<|sep|>' in case["input"]
+                assert '<|open|>response<|sep|>Answer<|close|>response<|sep|>' in case["input"]
+                assert case["expect"]["dynamo"]["class"] == "LOSS"
+        else:
+            event = case["golden"][0]
+            assert event["name"] == "lookup"
+            assert matches_schema(event["arguments"], case["tools"][0]["parameters"])
+            if parent == "tool_only":
+                assert ' \n\t{"q":' in case["input"]
+                assert event["arguments"] == {"q": "x"}
+            else:
+                payload = event["arguments"]["q"]
+                assert payload in case["input"]
+                assert "literal" in payload
+                assert ("assistant to=user<|message|>" if family == "muse_glimmer"
+                        else '<|open|>response<|sep|>') in payload
 
 
 def test_display_policy_has_no_dangling_groups_or_scenarios():

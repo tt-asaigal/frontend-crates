@@ -196,6 +196,115 @@ changes:
             arguments: '{}'
             complete: true
         - expected: []
+  gpt_oss_quoted_message_header_literal:
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: lookup
+          arguments:
+            q: <|close|>call<|sep|><|open|>response<|sep|>literal<|close|>response<|sep|>
+        chunks:
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: lookup
+            arguments: '{"q":"<|close|>call<|sep|><|open|>response<|sep|>literal<|close|>response<|sep|>"}'
+            complete: true
+        - expected: []
+  gpt_oss_quoted_truncated_tool_then_final:
+    observation:
+      value:
+        assembled: []
+        chunks:
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+  gpt_oss_tool_body_whitespace:
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: lookup
+          arguments:
+            q: x
+        chunks:
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: lookup
+            arguments: '{"q":"x"}'
+            complete: true
+        - expected: []
   guided_json_after_reasoning:
     observation:
       value:

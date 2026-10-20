@@ -7,6 +7,27 @@ provenance:
 document:
   mode: unified
 changes:
+  gpt_oss_tool_body_whitespace:
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: lookup
+          arguments:
+            q: x
+        chunks:
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: lookup
+            arguments: '{"q":"x"}'
+            complete: true
+        - expected: []
+        - expected: []
   guided_json_native_parameter_array_before_payload:
     observation:
       value:
@@ -202,6 +223,11 @@ changes:
   native_unmatched_quote_then_call:
     absent: true
 metadata_changes:
+  gpt_oss_tool_body_whitespace:
+    init:
+      starting_state: None
+      tool_output_mode: Native
+      named_tool: null
   guided_json_native_parameter_array_before_payload:
     init:
       starting_state: Response

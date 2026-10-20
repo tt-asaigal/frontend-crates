@@ -100,6 +100,27 @@ changes:
             arguments: '{}'
             complete: true
         - expected: []
+  gpt_oss_tool_body_whitespace:
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: lookup
+          arguments:
+            q: x
+        chunks:
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: lookup
+            arguments: '{"q":"x"}'
+            complete: true
+        - expected: []
+        - expected: []
   guided_json_after_reasoning:
     observation:
       value:
