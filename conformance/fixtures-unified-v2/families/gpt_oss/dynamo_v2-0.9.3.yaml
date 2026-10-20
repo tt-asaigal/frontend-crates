@@ -2017,6 +2017,60 @@ document_overrides:
         source_sha256: 5a64213f443f5db41ca126f0f8a5c65e4e6d5fcceebedfe1a296afcbd73a006c
         git_commit: 5c4c2089df85550e79428e5f682b3974ea595e10
       inherited_from: null
+  gpt_oss_complete_alternate_message_ends:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.9.3
+      capture_origin:
+        crate_version: 0.9.3
+        source_sha256: 72aeff5c4163ec2bd37747938af8c2218753481900e5ea9ca5a78ba36a85f79e
+        git_commit: 20085e1cf3ad11b6b585398b1e47941ed8f566e1
+      inherited_from: null
+  gpt_oss_constrained_final_header:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.9.3
+      capture_origin:
+        crate_version: 0.9.3
+        source_sha256: 72aeff5c4163ec2bd37747938af8c2218753481900e5ea9ca5a78ba36a85f79e
+        git_commit: 20085e1cf3ad11b6b585398b1e47941ed8f566e1
+      inherited_from: null
+  gpt_oss_implicit_recipient_first_header:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.9.3
+      capture_origin:
+        crate_version: 0.9.3
+        source_sha256: 72aeff5c4163ec2bd37747938af8c2218753481900e5ea9ca5a78ba36a85f79e
+        git_commit: 20085e1cf3ad11b6b585398b1e47941ed8f566e1
+      inherited_from: null
+  gpt_oss_quoted_message_header_literal:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.9.3
+      capture_origin:
+        crate_version: 0.9.3
+        source_sha256: 72aeff5c4163ec2bd37747938af8c2218753481900e5ea9ca5a78ba36a85f79e
+        git_commit: 20085e1cf3ad11b6b585398b1e47941ed8f566e1
+      inherited_from: null
+  gpt_oss_quoted_truncated_tool_then_final:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.9.3
+      capture_origin:
+        crate_version: 0.9.3
+        source_sha256: 72aeff5c4163ec2bd37747938af8c2218753481900e5ea9ca5a78ba36a85f79e
+        git_commit: 20085e1cf3ad11b6b585398b1e47941ed8f566e1
+      inherited_from: null
+  gpt_oss_tool_body_whitespace:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.9.3
+      capture_origin:
+        crate_version: 0.9.3
+        source_sha256: 72aeff5c4163ec2bd37747938af8c2218753481900e5ea9ca5a78ba36a85f79e
+        git_commit: 20085e1cf3ad11b6b585398b1e47941ed8f566e1
+      inherited_from: null
   guided_json_narrated_prefix_inside_reasoning:
     capture_provenance:
       captured_with:
@@ -2052,6 +2106,15 @@ document_overrides:
         crate_version: 0.9.3
         git_commit: ad2f5bd97c13906223a8bcacc5e038b5281e8f2b
         source_sha256: 72aeff5c4163ec2bd37747938af8c2218753481900e5ea9ca5a78ba36a85f79e
+      inherited_from: null
+  guided_response_native_wrapper_whitespace_before_prose:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.9.3
+      capture_origin:
+        crate_version: 0.9.3
+        source_sha256: 72aeff5c4163ec2bd37747938af8c2218753481900e5ea9ca5a78ba36a85f79e
+        git_commit: 20085e1cf3ad11b6b585398b1e47941ed8f566e1
       inherited_from: null
   structured_response_after_reasoning:
     capture_provenance:

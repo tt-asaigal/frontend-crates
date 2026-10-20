@@ -341,6 +341,461 @@ changes:
             arguments: ''
             complete: true
         - expected: []
+  gpt_oss_complete_alternate_message_ends:
+    observation:
+      value:
+        assembled: []
+        chunks:
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: lookup
+            arguments: ''
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '{"'
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: q
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '":"'
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: end
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '"}'
+            complete: false
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: lookup
+            arguments: ''
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '{"'
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: q
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '":"'
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: return
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '"}'
+            complete: false
+        - expected: []
+        - expected: []
+  gpt_oss_constrained_final_header:
+    observation:
+      value:
+        assembled: []
+        chunks:
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+  gpt_oss_implicit_recipient_first_header:
+    observation:
+      value:
+        assembled:
+        - kind: text
+          text: ' to=functions.lookup'
+        chunks:
+        - expected:
+          - kind: text
+            text: ' to=functions.lookup'
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+  gpt_oss_quoted_message_header_literal:
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: lookup
+          arguments:
+            q: <|call|><|start|>assistant<|channel|>final<|message|>literal<|return|>
+        chunks:
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: lookup
+            arguments: ''
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '{"'
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: q
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '":"'
+            complete: false
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: <
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '|'
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: call
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '|'
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '>'
+            complete: false
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: <
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '|'
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: start
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '|'
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '>'
+            complete: false
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: assistant
+            complete: false
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: <
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '|'
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: channel
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '|'
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '>'
+            complete: false
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: final
+            complete: false
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: <
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '|'
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: message
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '|'
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '>'
+            complete: false
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: literal
+            complete: false
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: <
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '|'
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: return
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '|'
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '>'
+            complete: false
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '"}'
+            complete: false
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: ''
+            complete: true
+        - expected: []
+  gpt_oss_quoted_truncated_tool_then_final:
+    observation:
+      value:
+        assembled: []
+        chunks:
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: lookup
+            arguments: ''
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '{"'
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: q
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '":"'
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: abc
+            complete: false
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: <
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '|'
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: call
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '|'
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '>'
+            complete: false
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: <
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '|'
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: start
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '|'
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '>'
+            complete: false
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: assistant
+            complete: false
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: <
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '|'
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: channel
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '|'
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '>'
+            complete: false
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: final
+            complete: false
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: <
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '|'
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: message
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '|'
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '>'
+            complete: false
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: Answer
+            complete: false
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: <
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '|'
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: return
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '|'
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '>'
+            complete: false
+        - expected: []
+  gpt_oss_tool_body_whitespace:
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: lookup
+          arguments: {}
+        chunks:
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: lookup
+            arguments: ''
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '{"'
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: q
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '":"'
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: x
+            complete: false
+          - kind: tool_call
+            name: null
+            arguments: '"}'
+            complete: false
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: x"}
+            complete: true
+        - expected: []
   guided_json_gt_in_argument_bare_opener:
     absent: true
   guided_json_gt_in_argument_named_bare_opener:
@@ -349,6 +804,34 @@ changes:
     absent: true
   guided_json_tool_open_before_payload:
     absent: true
+  guided_response_native_wrapper_whitespace_before_prose:
+    observation:
+      value:
+        assembled:
+        - kind: text
+          text: 'ok then '
+        - kind: tool_call
+          name: get_weather
+          arguments:
+            city: Paris
+        chunks:
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: text
+            text: 'ok then '
+          - kind: tool_call
+            name: get_weather
+            arguments: '{"city": "Paris"}'
+            complete: true
+        - expected: []
   harmony_guided_json_gt_in_argument_bare_opener:
     case_key: UNIFIED.gpt_oss-harmony_guided_json_gt_in_argument_bare_opener
     stimulus:
@@ -503,6 +986,36 @@ changes:
         code: legacy_unclassified
         detail: "structural tag: structural-tag verifier: Traceback (most recent call last):\n  File \"/home/keivenc/dev/frontend-crates/frontend-crates__434-gpt-oss__DIS-3151/conformance/utils/src/check_structural_tag.py\", line 61, in <module>\n    print(json.dumps(verify(json.load(sys.stdin))))\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/keivenc/dev/frontend-crates/frontend-crates__434-gpt-oss__DIS-3151/conformance/utils/src/check_structural_tag.py\", line 56, in verify\n    raise ValueError(f\"grammar accepted rejection probe {index}\")\nValueError: grammar accepted rejection probe 0\n"
 metadata_changes:
+  gpt_oss_complete_alternate_message_ends:
+    init:
+      starting_state: None
+      tool_output_mode: Native
+      named_tool: null
+  gpt_oss_constrained_final_header:
+    init:
+      starting_state: None
+      tool_output_mode: Native
+      named_tool: null
+  gpt_oss_implicit_recipient_first_header:
+    init:
+      starting_state: None
+      tool_output_mode: Native
+      named_tool: null
+  gpt_oss_quoted_message_header_literal:
+    init:
+      starting_state: None
+      tool_output_mode: Native
+      named_tool: null
+  gpt_oss_quoted_truncated_tool_then_final:
+    init:
+      starting_state: None
+      tool_output_mode: Native
+      named_tool: null
+  gpt_oss_tool_body_whitespace:
+    init:
+      starting_state: None
+      tool_output_mode: Native
+      named_tool: null
   guided_json_narrated_prefix_inside_reasoning:
     init:
       starting_state: None
@@ -521,6 +1034,11 @@ metadata_changes:
   guided_json_syntax_error_bare_opener:
     init:
       starting_state: None
+      tool_output_mode: GuidedJson
+      named_tool: null
+  guided_response_native_wrapper_whitespace_before_prose:
+    init:
+      starting_state: Response
       tool_output_mode: GuidedJson
       named_tool: null
   structured_response_after_reasoning:
@@ -563,6 +1081,60 @@ document_overrides:
         git_commit: 5c4c2089df85550e79428e5f682b3974ea595e10
         source_sha256: af88f893ef94d1b52a2c99a9b6d8f26dab02e02f445aca51318aa9de53cface8
       inherited_from: 0.9.0
+  gpt_oss_complete_alternate_message_ends:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.9.1
+      capture_origin:
+        crate_version: 0.9.1
+        source_sha256: 27d1c6e1232ae8738112204d6689e69a10daff7d555c17f1c641ae3efa451e61
+        git_commit: 012c5344a0739928896529ea182d152f91df2714
+      inherited_from: null
+  gpt_oss_constrained_final_header:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.9.1
+      capture_origin:
+        crate_version: 0.9.1
+        source_sha256: 27d1c6e1232ae8738112204d6689e69a10daff7d555c17f1c641ae3efa451e61
+        git_commit: 012c5344a0739928896529ea182d152f91df2714
+      inherited_from: null
+  gpt_oss_implicit_recipient_first_header:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.9.1
+      capture_origin:
+        crate_version: 0.9.1
+        source_sha256: 27d1c6e1232ae8738112204d6689e69a10daff7d555c17f1c641ae3efa451e61
+        git_commit: 012c5344a0739928896529ea182d152f91df2714
+      inherited_from: null
+  gpt_oss_quoted_message_header_literal:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.9.1
+      capture_origin:
+        crate_version: 0.9.1
+        source_sha256: 27d1c6e1232ae8738112204d6689e69a10daff7d555c17f1c641ae3efa451e61
+        git_commit: 012c5344a0739928896529ea182d152f91df2714
+      inherited_from: null
+  gpt_oss_quoted_truncated_tool_then_final:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.9.1
+      capture_origin:
+        crate_version: 0.9.1
+        source_sha256: 27d1c6e1232ae8738112204d6689e69a10daff7d555c17f1c641ae3efa451e61
+        git_commit: 012c5344a0739928896529ea182d152f91df2714
+      inherited_from: null
+  gpt_oss_tool_body_whitespace:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.9.1
+      capture_origin:
+        crate_version: 0.9.1
+        source_sha256: 27d1c6e1232ae8738112204d6689e69a10daff7d555c17f1c641ae3efa451e61
+        git_commit: 012c5344a0739928896529ea182d152f91df2714
+      inherited_from: null
   guided_json_narrated_prefix_inside_reasoning:
     capture_provenance:
       captured_with:
@@ -591,6 +1163,15 @@ document_overrides:
         git_commit: 012c5344a0739928896529ea182d152f91df2714
       inherited_from: null
   guided_json_syntax_error_bare_opener:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.9.1
+      capture_origin:
+        crate_version: 0.9.1
+        source_sha256: 27d1c6e1232ae8738112204d6689e69a10daff7d555c17f1c641ae3efa451e61
+        git_commit: 012c5344a0739928896529ea182d152f91df2714
+      inherited_from: null
+  guided_response_native_wrapper_whitespace_before_prose:
     capture_provenance:
       captured_with:
         dynamo_v2: 0.9.1

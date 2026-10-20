@@ -349,6 +349,82 @@ changes:
           - kind: text
             text: '[{"name": "get_weather", "arguments": {"city": "Paris"}}]'
         - expected: []
+  guided_response_native_wrapper_whitespace_before_prose:
+    observation:
+      value:
+        assembled:
+        - kind: text
+          text: "<|open|>tools<|sep|><|open|>call tool=\"f\" index=\"1\"<|sep|><|open|>argument key=\"x\" type=\"object\"<|sep|>{\"city\": \"Rome\"}<|close|>argument<|sep|><|close|>call<|sep|><|close|>tools<|sep|> \n\t ok then "
+        - kind: tool_call
+          name: get_weather
+          arguments:
+            city: Paris
+        chunks:
+        - expected:
+          - kind: text
+            text: <|open|>
+        - expected:
+          - kind: text
+            text: tools
+        - expected:
+          - kind: text
+            text: <|sep|>
+        - expected:
+          - kind: text
+            text: <|open|>
+        - expected:
+          - kind: text
+            text: call tool="f" index="1"
+        - expected:
+          - kind: text
+            text: <|sep|>
+        - expected:
+          - kind: text
+            text: <|open|>
+        - expected:
+          - kind: text
+            text: argument key="x" type="object"
+        - expected:
+          - kind: text
+            text: <|sep|>
+        - expected:
+          - kind: text
+            text: '{"city": "Rome"}'
+        - expected:
+          - kind: text
+            text: <|close|>
+        - expected:
+          - kind: text
+            text: argument
+        - expected:
+          - kind: text
+            text: <|sep|>
+        - expected:
+          - kind: text
+            text: <|close|>
+        - expected:
+          - kind: text
+            text: call
+        - expected:
+          - kind: text
+            text: <|sep|>
+        - expected:
+          - kind: text
+            text: <|close|>
+        - expected:
+          - kind: text
+            text: tools
+        - expected:
+          - kind: text
+            text: <|sep|>
+        - expected:
+          - kind: text
+            text: " \n\t ok then "
+          - kind: tool_call
+            name: get_weather
+            arguments: '{"city": "Paris"}'
+            complete: true
+        - expected: []
 metadata_changes:
   arg_json_null_anyof:
     init:
@@ -668,6 +744,11 @@ metadata_changes:
   guided_quoted_reasoning_closer_required:
     init:
       starting_state: Reasoning
+      tool_output_mode: GuidedJson
+      named_tool: null
+  guided_response_native_wrapper_whitespace_before_prose:
+    init:
+      starting_state: Response
       tool_output_mode: GuidedJson
       named_tool: null
   guided_response_quoted_control_braces_named:
@@ -1589,6 +1670,15 @@ document_overrides:
         git_commit: 460586046cd45f271b9fa8a904ab9af91220d2e9
       inherited_from: null
   guided_json_noncall_before_native_array_before_payload:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.25
+      capture_origin:
+        crate_version: 0.7.25
+        source_sha256: 4b8e5f76682c717b7992c60d25ac6f0d58233dd5595acf338e1f303c35743180
+        git_commit: 460586046cd45f271b9fa8a904ab9af91220d2e9
+      inherited_from: null
+  guided_response_native_wrapper_whitespace_before_prose:
     capture_provenance:
       captured_with:
         dynamo_v2: 0.7.25

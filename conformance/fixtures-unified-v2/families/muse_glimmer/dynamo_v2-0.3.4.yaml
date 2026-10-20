@@ -769,6 +769,24 @@ changes:
             name: get_weather
             arguments: '{"city": "Paris"}'
             terminal_metadata_unavailable: this build has no ToolCallDelta::complete
+  guided_response_native_wrapper_whitespace_before_prose:
+    observation:
+      value:
+        assembled:
+        - kind: text
+          text: "\n<atem:parameter name=\"x\">{\"city\": \"Rome\"}</atem:parameter>\n</atem:invoke> \n\t ok then [{\"name\": \"get_weather\", \"arguments\": {\"city\": \"Paris\"}}]"
+        chunks:
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: text
+            text: "\n<atem:parameter name=\"x\">{\"city\": \"Rome\"}</atem:parameter>\n</atem:invoke> \n\t ok then [{\"name\": \"get_weather\", \"arguments\": {\"city\": \"Paris\"}}]"
   guided_response_quoted_control_braces_named:
     observation:
       value:
@@ -1040,6 +1058,15 @@ document_overrides:
         git_commit: b1cf29488447a182860e93f1990458c2fe48e939
       inherited_from: null
   guided_json_noncall_before_native_array_before_payload:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.3.4
+      capture_origin:
+        crate_version: 0.3.4
+        source_sha256: 81da1ace97711d5416615f0ac1c2c1ff3a7dcc2a32cc421fdbf53d0d30298599
+        git_commit: b1cf29488447a182860e93f1990458c2fe48e939
+      inherited_from: null
+  guided_response_native_wrapper_whitespace_before_prose:
     capture_provenance:
       captured_with:
         dynamo_v2: 0.3.4

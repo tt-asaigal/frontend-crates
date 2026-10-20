@@ -610,6 +610,24 @@ changes:
             text: found
         - expected: []
         - expected: []
+  gpt_oss_complete_alternate_message_ends:
+    case_key: UNIFIED.gpt_oss-complete_alternate_message_ends
+    stimulus:
+      ref: current
+      semantic_sha256: 59735b7a908f3cde44cd0d717e84b9dae272246e5150fb1347499609ac5091dc
+    observation:
+      unavailable:
+        code: producer_source_unavailable
+        detail: Original parser 0.7.24 source could not be recovered with its recorded identity add2c59dea7800eba96993fbc7f0add387e03964ee319396540ba6eabe139791. The parser was not executed, and no newer output was substituted.
+  gpt_oss_constrained_final_header:
+    case_key: UNIFIED.gpt_oss-constrained_final_header
+    stimulus:
+      ref: current
+      semantic_sha256: fd5f1a342b9e8d4df5e4ed0eca1762709cd63dd259a884e0d03fd3f5c8d1d839
+    observation:
+      unavailable:
+        code: producer_source_unavailable
+        detail: Original parser 0.7.24 source could not be recovered with its recorded identity add2c59dea7800eba96993fbc7f0add387e03964ee319396540ba6eabe139791. The parser was not executed, and no newer output was substituted.
   gpt_oss_control_marker_inside_argument_string:
     case_key: UNIFIED.gpt_oss-control_marker_inside_argument_string
     stimulus:
@@ -643,6 +661,15 @@ changes:
             arguments: '{"markers":"<|start|><|channel|><|constrain|><|message|><|end|><|return|><|call|>"}'
             complete: true
         - expected: []
+  gpt_oss_implicit_recipient_first_header:
+    case_key: UNIFIED.gpt_oss-implicit_recipient_first_header
+    stimulus:
+      ref: current
+      semantic_sha256: 56992d89d8ef42935ac7f97927093565b9f450542558165d49eb501fbb65c7d5
+    observation:
+      unavailable:
+        code: producer_source_unavailable
+        detail: Original parser 0.7.24 source could not be recovered with its recorded identity add2c59dea7800eba96993fbc7f0add387e03964ee319396540ba6eabe139791. The parser was not executed, and no newer output was substituted.
   gpt_oss_interrupted_reasoning_then_response:
     case_key: UNIFIED.gpt_oss-interrupted_reasoning_then_response
     stimulus:
@@ -728,6 +755,33 @@ changes:
             arguments: '{"x":2}'
             complete: true
         - expected: []
+  gpt_oss_quoted_message_header_literal:
+    case_key: UNIFIED.gpt_oss-quoted_message_header_literal
+    stimulus:
+      ref: current
+      semantic_sha256: daed298a17f69c9f4e565a5453486e20a6d1e1581dfd5c8e8d1f9b32f1da2345
+    observation:
+      unavailable:
+        code: producer_source_unavailable
+        detail: Original parser 0.7.24 source could not be recovered with its recorded identity add2c59dea7800eba96993fbc7f0add387e03964ee319396540ba6eabe139791. The parser was not executed, and no newer output was substituted.
+  gpt_oss_quoted_truncated_tool_then_final:
+    case_key: UNIFIED.gpt_oss-quoted_truncated_tool_then_final
+    stimulus:
+      ref: current
+      semantic_sha256: c51bb17b577e9ba8c94bb56aa7d20adf7ba8290f66b7c51cc0dc94a19fd1b72d
+    observation:
+      unavailable:
+        code: producer_source_unavailable
+        detail: Original parser 0.7.24 source could not be recovered with its recorded identity add2c59dea7800eba96993fbc7f0add387e03964ee319396540ba6eabe139791. The parser was not executed, and no newer output was substituted.
+  gpt_oss_tool_body_whitespace:
+    case_key: UNIFIED.gpt_oss-tool_body_whitespace
+    stimulus:
+      ref: current
+      semantic_sha256: 60335802e5f272837210007dbb80fb7909b9f43942cf7d401ca2644249a2c9f2
+    observation:
+      unavailable:
+        code: producer_source_unavailable
+        detail: Original parser 0.7.24 source could not be recovered with its recorded identity add2c59dea7800eba96993fbc7f0add387e03964ee319396540ba6eabe139791. The parser was not executed, and no newer output was substituted.
   gpt_oss_truncated_tool_at_eof_is_dropped:
     case_key: UNIFIED.gpt_oss-truncated_tool_at_eof_is_dropped
     stimulus:
@@ -1728,6 +1782,15 @@ changes:
             arguments: '{"city": "Paris"}'
             complete: true
         - expected: []
+  guided_response_native_wrapper_whitespace_before_prose:
+    case_key: UNIFIED.35-guided_response_native_wrapper_whitespace_before_prose
+    stimulus:
+      ref: current
+      semantic_sha256: f0a51afe3a9b3a0cc80965e179c339594e645b7e7fad269fcfa69097eeb13c2f
+    observation:
+      unavailable:
+        code: producer_source_unavailable
+        detail: Original parser 0.7.24 source could not be recovered with its recorded identity add2c59dea7800eba96993fbc7f0add387e03964ee319396540ba6eabe139791. The parser was not executed, and no newer output was substituted.
   guided_response_quoted_control_braces_named:
     case_key: UNIFIED.35-guided_response_quoted_control_braces_named
     stimulus:
@@ -5058,6 +5121,24 @@ changes:
         - expected: []
 metadata_changes: {}
 document_overrides:
+  gpt_oss_complete_alternate_message_ends:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.24
+      capture_origin: null
+      inherited_from: null
+  gpt_oss_constrained_final_header:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.24
+      capture_origin: null
+      inherited_from: null
+  gpt_oss_implicit_recipient_first_header:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.24
+      capture_origin: null
+      inherited_from: null
   gpt_oss_interrupted_reasoning_then_response:
     capture_provenance:
       captured_with:
@@ -5083,6 +5164,24 @@ document_overrides:
       capture_origin: null
       inherited_from: null
   gpt_oss_invalid_tool_body_then_valid_call:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.24
+      capture_origin: null
+      inherited_from: null
+  gpt_oss_quoted_message_header_literal:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.24
+      capture_origin: null
+      inherited_from: null
+  gpt_oss_quoted_truncated_tool_then_final:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.24
+      capture_origin: null
+      inherited_from: null
+  gpt_oss_tool_body_whitespace:
     capture_provenance:
       captured_with:
         dynamo_v2: 0.7.24
@@ -5137,6 +5236,12 @@ document_overrides:
       capture_origin: null
       inherited_from: null
   guided_json_syntax_error_bare_opener:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.24
+      capture_origin: null
+      inherited_from: null
+  guided_response_native_wrapper_whitespace_before_prose:
     capture_provenance:
       captured_with:
         dynamo_v2: 0.7.24

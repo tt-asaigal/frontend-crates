@@ -38,6 +38,7 @@ from schema_cases import ARGUMENT_SECTIONS, schema_fold
 import unified_taxonomy
 from validate_conformance_status import cell_state
 from capture_stimulus import batch_final_events, capture_input  # noqa: E402
+from conformance.utils.tests import GPT_OSS_STANDALONE_HEADER_SCENARIOS
 import model as model_mod  # noqa: E402
 import generate_conformance_table as table  # noqa: E402
 from dynamo_version import dynamo_v2_label  # noqa: E402
@@ -1879,9 +1880,7 @@ def test_argument_sections_and_folds_preserve_all_authored_scenarios(model_v2):
 def test_shared_variants_consolidate_without_losing_requests(model_v2):
     tab = _tab(model_v2, "tab-unified")
     columns = {column["sub"]: column for column in tab["columns"]}
-    assert {s for s in columns if unified_taxonomy.display_tax(s)[0] == "gpt_oss"} == {
-        "gpt_oss_channel_header_variants", "gpt_oss_channel_first_tool_header",
-        "gpt_oss_chat_template_tool_header"}
+    assert {s for s in columns if unified_taxonomy.display_tax(s)[0] == "gpt_oss"} == GPT_OSS_STANDALONE_HEADER_SCENARIOS
     assert not (set(columns) & set(unified_taxonomy.SHARED_CASE_VARIANTS))
     for row in tab["rows"]:
         if row.get("section"):

@@ -18865,3 +18865,84 @@ cases:
         name: get_weather
         arguments:
           city: Paris
+  guided_response_native_wrapper_whitespace_before_prose:
+    lifecycle: active
+    scenario: guided_response_native_wrapper_whitespace_before_prose
+    description: Response-prefilled guided output contains a native invocation wrapper, then whitespace and visible prose before the real guided call. Muse uses its inner ATEM invocation, without a new recipient-routed message envelope. Whitespace after the suppressed native wrapper is structural across every chunk boundary; the following prose remains visible. The native Rome argument tests lexical ownership rather than validation against the offered schema; only the guided Paris call dispatches.
+    policy:
+    - I3
+    - I7
+    display_id: UNIFIED.35-guided_response_native_wrapper_whitespace_before_prose
+    historical_ids: []
+    request:
+      input: "<atem:invoke name=\"f\">\n<atem:parameter name=\"x\">{\"city\": \"Rome\"}</atem:parameter>\n</atem:invoke> \n\t ok then [{\"name\": \"get_weather\", \"arguments\": {\"city\": \"Paris\"}}]"
+      init:
+        starting_state: Response
+        tool_output_mode: GuidedJson
+        named_tool: null
+      finish_reason: stop
+      tools:
+      - name: get_weather
+        parameters:
+          type: object
+          properties:
+            city:
+              type: string
+      - name: f
+        parameters:
+          type: object
+          properties:
+            x:
+              type: string
+      - name: g
+        parameters:
+          type: object
+          properties:
+            y:
+              type: string
+      - name: run
+        parameters:
+          type: object
+          properties:
+            cmd:
+              type: string
+      - name: log
+        parameters:
+          type: object
+          properties:
+            note:
+              type: string
+      - name: sum_values
+        parameters:
+          type: object
+          properties:
+            values:
+              type: array
+              items:
+                type: number
+      - name: functions.
+        parameters:
+          type: object
+          properties: {}
+      chunks:
+      - delta_text: <atem:invoke name="f">
+      - delta_text: '
+
+          '
+      - delta_text: <atem:parameter name="x">
+      - delta_text: '{"city": "Rome"}'
+      - delta_text: </atem:parameter>
+      - delta_text: '
+
+          '
+      - delta_text: </atem:invoke>
+      - delta_text: " \n\t ok then [{\"name\": \"get_weather\", \"arguments\": {\"city\": \"Paris\"}}]"
+      - delta_text: ‹finish›
+    golden:
+      assembled:
+      - kind: text
+        text: 'ok then '
+      - kind: tool_call
+        name: get_weather
+        arguments:
+          city: Paris

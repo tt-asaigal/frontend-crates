@@ -438,6 +438,55 @@ changes:
         - delta_text: '<|start|>assistant<|channel|>commentary to=functions.capture_payload <|constrain|>json<|message|>{"count": 42, "ratio": 3.5, "flag": true, "narrowed": 42}<|call|>'
         - delta_text: ‹finish›
       semantic_sha256: c271534514989bd5327777f1ddcd84bc6e6bc63dd57fc36d06d5303e81db2f91
+  gpt_oss_complete_alternate_message_ends:
+    observation:
+      value:
+        assembled: []
+        chunks:
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+  gpt_oss_constrained_final_header:
+    observation:
+      value:
+        assembled: []
+        chunks:
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+  gpt_oss_implicit_recipient_first_header:
+    observation:
+      value:
+        assembled:
+        - kind: text
+          text: ' to=functions.lookup'
+        chunks:
+        - expected:
+          - kind: text
+            text: ' to=functions.lookup'
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
   gpt_oss_interrupted_reasoning_then_response:
     observation:
       value:
@@ -636,6 +685,77 @@ changes:
           - kind: tool_call
             name: get_weather
             arguments: '{"city": "Paris"}'
+            complete: true
+        - expected: []
+  gpt_oss_quoted_message_header_literal:
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: lookup
+          arguments:
+            q: <|call|><|start|>assistant<|channel|>final<|message|>literal<|return|>
+        chunks:
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: lookup
+            arguments: '{"q":"<|call|><|start|>assistant<|channel|>final<|message|>literal<|return|>"}'
+            complete: true
+        - expected: []
+  gpt_oss_quoted_truncated_tool_then_final:
+    observation:
+      value:
+        assembled: []
+        chunks:
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+  gpt_oss_tool_body_whitespace:
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: lookup
+          arguments:
+            q: x
+        chunks:
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: lookup
+            arguments: " \n\t{\"q\":\"x\"}"
             complete: true
         - expected: []
   guided_json_narrated_prefix_inside_reasoning:
@@ -882,6 +1002,34 @@ changes:
         - expected:
           - kind: text
             text: '[{"name": "get_weather", "arguments": {"city": '
+  guided_response_native_wrapper_whitespace_before_prose:
+    observation:
+      value:
+        assembled:
+        - kind: text
+          text: 'ok then '
+        - kind: tool_call
+          name: get_weather
+          arguments:
+            city: Paris
+        chunks:
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: text
+            text: 'ok then '
+          - kind: tool_call
+            name: get_weather
+            arguments: '{"city": "Paris"}'
+            complete: true
+        - expected: []
   guided_response_quoted_control_braces_named:
     observation:
       value:
@@ -4517,7 +4665,22 @@ metadata_changes:
       starting_state: None
       tool_output_mode: Native
       named_tool: null
+  gpt_oss_complete_alternate_message_ends:
+    init:
+      starting_state: None
+      tool_output_mode: Native
+      named_tool: null
+  gpt_oss_constrained_final_header:
+    init:
+      starting_state: None
+      tool_output_mode: Native
+      named_tool: null
   gpt_oss_control_marker_inside_argument_string:
+    init:
+      starting_state: None
+      tool_output_mode: Native
+      named_tool: null
+  gpt_oss_implicit_recipient_first_header:
     init:
       starting_state: None
       tool_output_mode: Native
@@ -4548,6 +4711,21 @@ metadata_changes:
       tool_output_mode: Native
       named_tool: null
   gpt_oss_multiple_unknown_and_empty_tools:
+    init:
+      starting_state: None
+      tool_output_mode: Native
+      named_tool: null
+  gpt_oss_quoted_message_header_literal:
+    init:
+      starting_state: None
+      tool_output_mode: Native
+      named_tool: null
+  gpt_oss_quoted_truncated_tool_then_final:
+    init:
+      starting_state: None
+      tool_output_mode: Native
+      named_tool: null
+  gpt_oss_tool_body_whitespace:
     init:
       starting_state: None
       tool_output_mode: Native
@@ -4790,6 +4968,11 @@ metadata_changes:
   guided_quoted_reasoning_closer_required_pr424:
     init:
       starting_state: Reasoning
+      tool_output_mode: GuidedJson
+      named_tool: null
+  guided_response_native_wrapper_whitespace_before_prose:
+    init:
+      starting_state: Response
       tool_output_mode: GuidedJson
       named_tool: null
   guided_response_quoted_control_braces_named:
@@ -5722,6 +5905,33 @@ document_overrides:
         dynamo_v2: 0.7.25+source.4b8e5f76682c717b7992c60d25ac6f0d58233dd5595acf338e1f303c35743180
       capture_origin: null
       inherited_from: null
+  gpt_oss_complete_alternate_message_ends:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.25
+      capture_origin:
+        crate_version: 0.7.25
+        source_sha256: 4b8e5f76682c717b7992c60d25ac6f0d58233dd5595acf338e1f303c35743180
+        git_commit: 460586046cd45f271b9fa8a904ab9af91220d2e9
+      inherited_from: null
+  gpt_oss_constrained_final_header:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.25
+      capture_origin:
+        crate_version: 0.7.25
+        source_sha256: 4b8e5f76682c717b7992c60d25ac6f0d58233dd5595acf338e1f303c35743180
+        git_commit: 460586046cd45f271b9fa8a904ab9af91220d2e9
+      inherited_from: null
+  gpt_oss_implicit_recipient_first_header:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.25
+      capture_origin:
+        crate_version: 0.7.25
+        source_sha256: 4b8e5f76682c717b7992c60d25ac6f0d58233dd5595acf338e1f303c35743180
+        git_commit: 460586046cd45f271b9fa8a904ab9af91220d2e9
+      inherited_from: null
   gpt_oss_interrupted_reasoning_then_response:
     capture_provenance:
       captured_with:
@@ -5759,6 +5969,33 @@ document_overrides:
         git_commit: 460586046cd45f271b9fa8a904ab9af91220d2e9
       inherited_from: null
   gpt_oss_invalid_tool_body_then_valid_call:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.25
+      capture_origin:
+        crate_version: 0.7.25
+        source_sha256: 4b8e5f76682c717b7992c60d25ac6f0d58233dd5595acf338e1f303c35743180
+        git_commit: 460586046cd45f271b9fa8a904ab9af91220d2e9
+      inherited_from: null
+  gpt_oss_quoted_message_header_literal:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.25
+      capture_origin:
+        crate_version: 0.7.25
+        source_sha256: 4b8e5f76682c717b7992c60d25ac6f0d58233dd5595acf338e1f303c35743180
+        git_commit: 460586046cd45f271b9fa8a904ab9af91220d2e9
+      inherited_from: null
+  gpt_oss_quoted_truncated_tool_then_final:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.25
+      capture_origin:
+        crate_version: 0.7.25
+        source_sha256: 4b8e5f76682c717b7992c60d25ac6f0d58233dd5595acf338e1f303c35743180
+        git_commit: 460586046cd45f271b9fa8a904ab9af91220d2e9
+      inherited_from: null
+  gpt_oss_tool_body_whitespace:
     capture_provenance:
       captured_with:
         dynamo_v2: 0.7.25
@@ -5840,6 +6077,15 @@ document_overrides:
         git_commit: 460586046cd45f271b9fa8a904ab9af91220d2e9
       inherited_from: null
   guided_json_syntax_error_bare_opener:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.25
+      capture_origin:
+        crate_version: 0.7.25
+        source_sha256: 4b8e5f76682c717b7992c60d25ac6f0d58233dd5595acf338e1f303c35743180
+        git_commit: 460586046cd45f271b9fa8a904ab9af91220d2e9
+      inherited_from: null
+  guided_response_native_wrapper_whitespace_before_prose:
     capture_provenance:
       captured_with:
         dynamo_v2: 0.7.25

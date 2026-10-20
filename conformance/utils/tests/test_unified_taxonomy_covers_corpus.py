@@ -27,6 +27,7 @@ SRC = UTILS / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
+from conformance.utils.tests import GPT_OSS_STANDALONE_HEADER_SCENARIOS
 from conformance.utils.tests.schema_oracle import matches_schema
 
 import pytest  # noqa: E402
@@ -525,6 +526,7 @@ def test_response_state_uses_only_control_marker_contracts() -> None:
         "guided_json_native_parameter_array_before_payload",
         "guided_json_native_parameter_string_before_payload",
         "guided_json_noncall_before_native_array_before_payload",
+        "guided_response_native_wrapper_whitespace_before_prose",
     }
     for family in NATIVE_FAMILIES:
         cases = build_cases(family)
@@ -589,6 +591,8 @@ def test_response_state_uses_only_control_marker_contracts() -> None:
                 marker = '<｜DSML｜invoke'
             elif scenario == "gemma4_guided_response_extra_body_opener":
                 marker = "call:get_weather{"
+            elif scenario == "guided_response_native_wrapper_whitespace_before_prose":
+                marker = "<atem:invoke" if family == "muse_glimmer" else control_tokens(family)[2]
             elif family == "muse_glimmer":
                 marker = "<|message|>"
             else:
@@ -890,15 +894,15 @@ def test_unified_case_counts_match_the_generator():
     denominator survived in the prose before.
     """
     family_specific = {
-        "deepseek_v4": 131,
-        "deepseek_v41": 127,
-        "gemma4": 124,
-        "glm47": 122,
-        "gpt_oss": 157,
-        "kimi_k2": 121,
-        "kimi_k3": 128,
-        "muse_glimmer": 128,
-        "qwen3": 125,
+        "deepseek_v4": 132,
+        "deepseek_v41": 128,
+        "gemma4": 125,
+        "glm47": 123,
+        "gpt_oss": 164,
+        "kimi_k2": 122,
+        "kimi_k3": 129,
+        "muse_glimmer": 129,
+        "qwen3": 126,
     }
     assert set(family_specific) == set(FAMILIES)
     per_family = {fam: len(build_cases(fam)) for fam in FAMILIES}
@@ -911,7 +915,7 @@ def test_deferred_case_ids_are_not_in_the_active_taxonomy():
     deferred = {"1-2", "5-5", "6-2", "32-6", "50-1", "50-2"} | {
         f"31-{number}" for number in range(31, 41)
     }
-    assert len(UNIFIED_TAX) == 212 + len(CONFORMANCE_CASES)
+    assert len(UNIFIED_TAX) == 219 + len(CONFORMANCE_CASES)
     assert not {f"UNIFIED.{case_id}" for case_id in deferred} & {
         numbered_id(scenario) for scenario in UNIFIED_TAX
     }
@@ -1339,26 +1343,31 @@ def _native_input_calls(family, raw):
     if family == "gpt_oss":
         calls = []
         decoder = json.JSONDecoder()
+        endings = ("<|call|>", "<|end|>", "<|return|>")
+        owned_until = 0
         headers = re.finditer(
-            r"(?:<\|start\|>assistant|<\|channel\|>)(?P<header>.*?)<\|message\|>",
+            r"(?:<\|start\|>assistant|<\|channel\|>|\A(?=\s*to=functions\.))(?P<header>.*?)<\|message\|>",
             raw,
             re.S,
         )
         for header in headers:
+            if header.start() < owned_until:
+                continue
             recipient = re.search(r"\bto=functions\.([\w.-]+)", header["header"])
             if recipient is None:
                 continue
             name = recipient[1]
             body_start = header.end()
             at = body_start + len(raw[body_start:]) - len(raw[body_start:].lstrip())
-            if raw.startswith("<|call|>", at):
+            if raw.startswith(endings, at):
                 calls.append({"kind": "tool_call", "name": name, "arguments": {}})
                 continue
             try:
                 arguments, end = decoder.raw_decode(raw, at)
             except json.JSONDecodeError:
                 continue
-            if not isinstance(arguments, dict) or not raw[end:].lstrip().startswith("<|call|>"):
+            owned_until = end
+            if not isinstance(arguments, dict) or not raw[end:].lstrip().startswith(endings):
                 continue
             calls.append({"kind": "tool_call", "name": name, "arguments": arguments})
         return calls
@@ -1442,6 +1451,29 @@ def _native_input_calls(family, raw):
                     arguments = values[0]
         calls.append({"kind": "tool_call", "name": match[1], "arguments": arguments})
     return calls
+
+
+@pytest.mark.parametrize("header", [
+    "<|start|>assistant to=functions.lookup<|channel|>commentary",
+    "<|channel|>commentary to=functions.lookup",
+    " to=functions.lookup<|channel|>commentary <|constrain|>json",
+])
+@pytest.mark.parametrize("end", ["<|call|>", "<|end|>", "<|return|>"])
+def test_harmony_fixture_projection_keeps_header_and_boundary_variants(header, end):
+    raw = header + '<|message|>{"q":"x"}' + end
+    assert _native_input_calls("gpt_oss", raw) == [
+        {"kind": "tool_call", "name": "lookup", "arguments": {"q": "x"}}
+    ]
+
+
+def test_harmony_fixture_projection_keeps_plaintext_and_quoted_headers_as_data():
+    assert _native_input_calls("gpt_oss", "to=functions.lookup ordinary prose") == []
+    quoted = '<|start|>assistant to=functions.fake<|message|>{}<|call|>'
+    arguments = {"q": quoted}
+    raw = '<|start|>assistant to=functions.lookup<|message|>' + json.dumps(arguments) + '<|call|>'
+    assert _native_input_calls("gpt_oss", raw) == [
+        {"kind": "tool_call", "name": "lookup", "arguments": arguments}
+    ]
 
 
 @pytest.mark.parametrize(("family", "invocation_start", "fake_invocation", "invocation_end"), [
@@ -1758,6 +1790,7 @@ def _assert_cross_family_contract(corpus):
                     "guided_json_native_parameter_object_before_payload",
                     "guided_json_native_parameter_array_before_payload",
                     "guided_json_noncall_before_native_array_before_payload",
+                    "guided_response_native_wrapper_whitespace_before_prose",
                 }:
                     for call in suppressed:
                         if isinstance(call["arguments"]["x"], str):
@@ -1948,8 +1981,7 @@ def test_gpt_oss_variants_use_shared_parents_or_explicit_header_grammar(scenario
         assert len(G.scenario_families(parent)) > 1
         assert taxonomy.display_section(scenario) == taxonomy.display_section(parent)
     else:
-        assert scenario in {"gpt_oss_channel_header_variants", "gpt_oss_channel_first_tool_header",
-                            "gpt_oss_chat_template_tool_header"}
+        assert scenario in GPT_OSS_STANDALONE_HEADER_SCENARIOS
         assert taxonomy.display_tax(scenario)[0] == "gpt_oss"
     assert taxonomy.scenario_for_label(numbered_id(scenario), scenario=scenario) == scenario
 

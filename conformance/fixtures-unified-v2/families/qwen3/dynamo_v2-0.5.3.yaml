@@ -708,6 +708,66 @@ changes:
             name: get_weather
             arguments: '{"city": "Paris"}'
             complete: true
+  guided_response_native_wrapper_whitespace_before_prose:
+    observation:
+      value:
+        assembled:
+        - kind: text
+          text: '<function=f>
+
+            <parameter=x>
+
+            {"city": "Rome"}
+
+            </parameter>
+
+            </function>
+
+            ok then '
+        - kind: tool_call
+          name: get_weather
+          arguments:
+            city: Paris
+        chunks:
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: text
+            text: '<function=f>
+
+              <parameter=x>
+
+              {"city": "Rome"}
+
+              '
+        - expected:
+          - kind: text
+            text: </parameter>
+        - expected:
+          - kind: text
+            text: '
+
+              '
+        - expected:
+          - kind: text
+            text: </function>
+        - expected:
+          - kind: text
+            text: '
+
+              '
+        - expected: []
+        - expected:
+          - kind: text
+            text: 'ok then '
+          - kind: tool_call
+            name: get_weather
+            arguments: '{"city": "Paris"}'
+            complete: true
+        - expected: []
   guided_response_quoted_control_braces_named:
     observation:
       value:

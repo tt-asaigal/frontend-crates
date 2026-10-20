@@ -340,6 +340,11 @@ changes:
       unavailable:
         code: producer_source_unavailable
         detail: 'Historical parser 0.7.24 was not executed for this request: the original producer source could not be recovered with its recorded fingerprint 9559d07658177baf319de33b89bd3f1d4414dda1d85728e70daf0c90cbeca731. No release tag or newer parser was substituted.'
+  guided_response_native_wrapper_whitespace_before_prose:
+    observation:
+      unavailable:
+        code: producer_source_unavailable
+        detail: Original parser 0.7.24 source could not be recovered with its recorded identity 9559d07658177baf319de33b89bd3f1d4414dda1d85728e70daf0c90cbeca731. The parser was not executed, and no newer output was substituted.
   structured_response_after_reasoning:
     observation:
       unavailable:
@@ -366,6 +371,12 @@ document_overrides:
       capture_origin: null
       inherited_from: null
   guided_json_noncall_before_native_array_before_payload:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.24
+      capture_origin: null
+      inherited_from: null
+  guided_response_native_wrapper_whitespace_before_prose:
     capture_provenance:
       captured_with:
         dynamo_v2: 0.7.24

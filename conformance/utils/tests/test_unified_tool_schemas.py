@@ -86,18 +86,34 @@ def _assert_golden_schemas(cases, tools):
         offered_tools = case.get("tools", tools)
         schemas = {tool["name"]: tool["parameters"] for tool in offered_tools}
         assert len(schemas) == len(offered_tools)
-        if not offered_tools:
-            # Published Harmony requests can exercise lexical parsing without schemas.
-            assert case_id.endswith(".gpt_oss")
-            continue
         for event in case["golden"]:
             if event["kind"] == "tool_call":
+                if not offered_tools:
+                    # Published Harmony calls can exercise lexical parsing without schemas.
+                    assert case_id.endswith(".gpt_oss")
+                    continue
                 if case_id.startswith("UNIFIED.malformed_json_then_two_valid_calls.") and event["name"] == "bad":
                     family = case_id.rsplit(".", 1)[1]
                     assert family in {"kimi_k2", "qwen3", "glm47", "deepseek_v4", "muse_glimmer", "gpt_oss"}
                     assert event["arguments"] == ({} if family == "kimi_k2" else {"value": '{"x":"unfinished'})
                     continue
                 _assert_value(event["arguments"], schemas[event["name"]])
+
+
+@pytest.mark.parametrize("family", ["qwen3", "gpt_oss"])
+def test_schema_free_text_does_not_imply_a_schema_free_tool_call(family):
+    case = {"tools": [], "golden": [
+        {"kind": "reasoning", "text": "analysis"},
+        {"kind": "text", "text": "response"},
+    ]}
+    cases = {f"UNIFIED.no_tools.{family}": case}
+    _assert_golden_schemas(cases, unified_tools())
+    case["golden"].append({"kind": "tool_call", "name": "get_weather", "arguments": {"city": "Paris"}})
+    if family == "gpt_oss":
+        _assert_golden_schemas(cases, unified_tools())
+    else:
+        with pytest.raises(AssertionError):
+            _assert_golden_schemas(cases, unified_tools())
 
 
 @pytest.mark.parametrize("family", G.FAMILIES)

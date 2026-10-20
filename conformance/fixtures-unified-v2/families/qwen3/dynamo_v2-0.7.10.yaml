@@ -380,6 +380,11 @@ changes:
     case_key: UNIFIED.31-24
   guided_json_wrapped_in_tool_markup:
     case_key: UNIFIED.31-7
+  guided_response_native_wrapper_whitespace_before_prose:
+    observation:
+      unavailable:
+        code: producer_source_unavailable
+        detail: Original parser 0.7.10 source could not be recovered with its recorded identity 39e6feb494844ddfbcdf21cfb4143696044b295e0f210c27eaab701f8f61bb5d. The parser was not executed, and no newer output was substituted.
   interstitial_text:
     case_key: UNIFIED.11.e
   narrated_calls:
@@ -493,6 +498,7 @@ changes:
 metadata_changes:
   guided_json_native_parameter_string_before_payload: {}
   guided_json_noncall_before_native_array_before_payload: {}
+  guided_response_native_wrapper_whitespace_before_prose: {}
   structured_response_after_reasoning: {}
 document_overrides:
   guided_json_native_parameter_string_before_payload:
@@ -502,6 +508,12 @@ document_overrides:
       capture_origin: null
       inherited_from: null
   guided_json_noncall_before_native_array_before_payload:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.10
+      capture_origin: null
+      inherited_from: null
+  guided_response_native_wrapper_whitespace_before_prose:
     capture_provenance:
       captured_with:
         dynamo_v2: 0.7.10

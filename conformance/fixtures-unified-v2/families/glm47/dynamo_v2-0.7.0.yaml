@@ -1036,6 +1036,15 @@ changes:
             name: get_weather
             arguments: '{"city": "Paris"}'
             complete: true
+  guided_response_native_wrapper_whitespace_before_prose:
+    case_key: UNIFIED.35-guided_response_native_wrapper_whitespace_before_prose
+    stimulus:
+      ref: current
+      semantic_sha256: 53754698352a5e0d695e4196263c886c4a9e7062bf9a5b1cdd21ad9d81a7526f
+    observation:
+      unavailable:
+        code: producer_source_unavailable
+        detail: Original parser 0.7.0 source could not be recovered with its recorded identity e7b9c2c22901e73914056f5ab8c4c5438191d088a445ae577a5e680870fa3e1d. The parser was not executed, and no newer output was substituted.
   guided_response_quoted_control_braces_named:
     case_key: UNIFIED.35-3
     stimulus:
@@ -2754,6 +2763,12 @@ document_overrides:
       capture_origin: null
       inherited_from: null
   guided_json_noncall_before_native_array_before_payload:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.0
+      capture_origin: null
+      inherited_from: null
+  guided_response_native_wrapper_whitespace_before_prose:
     capture_provenance:
       captured_with:
         dynamo_v2: 0.7.0

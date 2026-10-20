@@ -24,6 +24,33 @@ metadata_changes:
   guided_response_quoted_control_braces_required: {}
   native_unmatched_quote_then_call: {}
 document_overrides:
+  gpt_oss_complete_alternate_message_ends:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.27
+      capture_origin:
+        crate_version: 0.7.27
+        git_commit: cbdf6ccf2487871acabca4356f6dc5e9e93b3bed
+        source_sha256: 4856ec040366f5395f3e77b70c664524ffa62956ff5ef35837e6512425d5be59
+      inherited_from: null
+  gpt_oss_constrained_final_header:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.27
+      capture_origin:
+        crate_version: 0.7.27
+        git_commit: cbdf6ccf2487871acabca4356f6dc5e9e93b3bed
+        source_sha256: 4856ec040366f5395f3e77b70c664524ffa62956ff5ef35837e6512425d5be59
+      inherited_from: null
+  gpt_oss_implicit_recipient_first_header:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.27
+      capture_origin:
+        crate_version: 0.7.27
+        git_commit: cbdf6ccf2487871acabca4356f6dc5e9e93b3bed
+        source_sha256: 4856ec040366f5395f3e77b70c664524ffa62956ff5ef35837e6512425d5be59
+      inherited_from: null
   gpt_oss_interrupted_reasoning_then_response:
     capture_provenance:
       captured_with:
@@ -61,6 +88,33 @@ document_overrides:
         source_sha256: 4856ec040366f5395f3e77b70c664524ffa62956ff5ef35837e6512425d5be59
       inherited_from: null
   gpt_oss_invalid_tool_body_then_valid_call:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.27
+      capture_origin:
+        crate_version: 0.7.27
+        git_commit: cbdf6ccf2487871acabca4356f6dc5e9e93b3bed
+        source_sha256: 4856ec040366f5395f3e77b70c664524ffa62956ff5ef35837e6512425d5be59
+      inherited_from: null
+  gpt_oss_quoted_message_header_literal:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.27
+      capture_origin:
+        crate_version: 0.7.27
+        git_commit: cbdf6ccf2487871acabca4356f6dc5e9e93b3bed
+        source_sha256: 4856ec040366f5395f3e77b70c664524ffa62956ff5ef35837e6512425d5be59
+      inherited_from: null
+  gpt_oss_quoted_truncated_tool_then_final:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.27
+      capture_origin:
+        crate_version: 0.7.27
+        git_commit: cbdf6ccf2487871acabca4356f6dc5e9e93b3bed
+        source_sha256: 4856ec040366f5395f3e77b70c664524ffa62956ff5ef35837e6512425d5be59
+      inherited_from: null
+  gpt_oss_tool_body_whitespace:
     capture_provenance:
       captured_with:
         dynamo_v2: 0.7.27
@@ -149,6 +203,15 @@ document_overrides:
         crate_version: 0.7.27
         source_sha256: 4856ec040366f5395f3e77b70c664524ffa62956ff5ef35837e6512425d5be59
         git_commit: cbdf6ccf2487871acabca4356f6dc5e9e93b3bed
+      inherited_from: null
+  guided_response_native_wrapper_whitespace_before_prose:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.27
+      capture_origin:
+        crate_version: 0.7.27
+        git_commit: cbdf6ccf2487871acabca4356f6dc5e9e93b3bed
+        source_sha256: 4856ec040366f5395f3e77b70c664524ffa62956ff5ef35837e6512425d5be59
       inherited_from: null
   guided_response_quoted_control_braces_named:
     capture_provenance:

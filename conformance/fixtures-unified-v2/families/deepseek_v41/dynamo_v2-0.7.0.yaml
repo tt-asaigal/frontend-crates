@@ -51,3 +51,12 @@ document_overrides:
         source_sha256: 35311e7a2cfce560e74a847672a5498c0c03e0b42c51b360cd4bc024a9292809
         git_commit: 992f368fd2924a69d591bc00fd45de4529f5bf83
       inherited_from: null
+  guided_response_native_wrapper_whitespace_before_prose:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.0
+      capture_origin:
+        crate_version: 0.7.0
+        git_commit: 992f368fd2924a69d591bc00fd45de4529f5bf83
+        source_sha256: 35311e7a2cfce560e74a847672a5498c0c03e0b42c51b360cd4bc024a9292809
+      inherited_from: null

@@ -751,6 +751,44 @@ changes:
             name: get_weather
             arguments: '{"city": "Paris"}'
             complete: true
+  guided_response_native_wrapper_whitespace_before_prose:
+    observation:
+      value:
+        assembled:
+        - kind: text
+          text: "<atem:invoke name=\"f\">\n<atem:parameter name=\"x\">{\"city\": \"Rome\"}</atem:parameter>\n</atem:invoke> \n\t ok then "
+        - kind: tool_call
+          name: get_weather
+          arguments:
+            city: Paris
+        chunks:
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: text
+            text: '<atem:invoke name="f">
+
+              <atem:parameter name="x">{"city": "Rome"}'
+        - expected:
+          - kind: text
+            text: </atem:parameter>
+        - expected:
+          - kind: text
+            text: '
+
+              '
+        - expected:
+          - kind: text
+            text: </atem:invoke>
+        - expected:
+          - kind: text
+            text: " \n\t ok then "
+          - kind: tool_call
+            name: get_weather
+            arguments: '{"city": "Paris"}'
+            complete: true
+        - expected: []
   guided_response_quoted_control_braces_named:
     observation:
       value:

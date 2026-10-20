@@ -253,6 +253,32 @@ changes:
     case_key: UNIFIED.34-6
   guided_json_wrapped_in_tool_markup:
     case_key: UNIFIED.32-3
+  guided_response_native_wrapper_whitespace_before_prose:
+    observation:
+      value:
+        assembled:
+        - kind: text
+          text: 'ok then '
+        - kind: tool_call
+          name: get_weather
+          arguments:
+            city: Paris
+        chunks:
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: text
+            text: 'ok then '
+          - kind: tool_call
+            name: get_weather
+            arguments: '{"city": "Paris"}'
+            complete: true
+        - expected: []
   interstitial_text:
     case_key: UNIFIED.11-5
   narrated_calls:

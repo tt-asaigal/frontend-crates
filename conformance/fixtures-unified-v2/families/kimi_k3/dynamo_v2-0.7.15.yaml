@@ -274,6 +274,82 @@ changes:
       error:
         code: legacy_unclassified
         detail: 'historical parser panic: attempt to subtract with overflow'
+  guided_response_native_wrapper_whitespace_before_prose:
+    observation:
+      value:
+        assembled:
+        - kind: text
+          text: "<|open|>tools<|sep|><|open|>call tool=\"f\" index=\"1\"<|sep|><|open|>argument key=\"x\" type=\"object\"<|sep|>{\"city\": \"Rome\"}<|close|>argument<|sep|><|close|>call<|sep|><|close|>tools<|sep|> \n\t ok then "
+        - kind: tool_call
+          name: get_weather
+          arguments:
+            city: Paris
+        chunks:
+        - expected:
+          - kind: text
+            text: <|open|>
+        - expected:
+          - kind: text
+            text: tools
+        - expected:
+          - kind: text
+            text: <|sep|>
+        - expected:
+          - kind: text
+            text: <|open|>
+        - expected:
+          - kind: text
+            text: call tool="f" index="1"
+        - expected:
+          - kind: text
+            text: <|sep|>
+        - expected:
+          - kind: text
+            text: <|open|>
+        - expected:
+          - kind: text
+            text: argument key="x" type="object"
+        - expected:
+          - kind: text
+            text: <|sep|>
+        - expected:
+          - kind: text
+            text: '{"city": "Rome"}'
+        - expected:
+          - kind: text
+            text: <|close|>
+        - expected:
+          - kind: text
+            text: argument
+        - expected:
+          - kind: text
+            text: <|sep|>
+        - expected:
+          - kind: text
+            text: <|close|>
+        - expected:
+          - kind: text
+            text: call
+        - expected:
+          - kind: text
+            text: <|sep|>
+        - expected:
+          - kind: text
+            text: <|close|>
+        - expected:
+          - kind: text
+            text: tools
+        - expected:
+          - kind: text
+            text: <|sep|>
+        - expected:
+          - kind: text
+            text: " \n\t ok then "
+          - kind: tool_call
+            name: get_weather
+            arguments: '{"city": "Paris"}'
+            complete: true
+        - expected: []
   malformed_json_then_two_valid_calls:
     observation:
       value:
@@ -318,6 +394,11 @@ metadata_changes:
       starting_state: Response
       tool_output_mode: GuidedJson
       named_tool: null
+  guided_response_native_wrapper_whitespace_before_prose:
+    init:
+      starting_state: Response
+      tool_output_mode: GuidedJson
+      named_tool: null
 document_overrides:
   guided_json_native_parameter_array_before_payload:
     capture_provenance:
@@ -347,6 +428,15 @@ document_overrides:
         git_commit: 41d0410e937b31e9665d977a53796e13839801d6
       inherited_from: null
   guided_json_noncall_before_native_array_before_payload:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.15
+      capture_origin:
+        crate_version: 0.7.15
+        source_sha256: 8083be6e32dae8e8e337dca363273bf1ad96f5b705f3685a331e468df9292d2d
+        git_commit: 41d0410e937b31e9665d977a53796e13839801d6
+      inherited_from: null
+  guided_response_native_wrapper_whitespace_before_prose:
     capture_provenance:
       captured_with:
         dynamo_v2: 0.7.15
