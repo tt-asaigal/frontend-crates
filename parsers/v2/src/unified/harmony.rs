@@ -23,7 +23,7 @@ const CHANNEL: &str = "<|channel|>";
 const FORMAT: &str = "<|constrain|>";
 const MESSAGE: &str = "<|message|>";
 const MESSAGE_END: &str = "<|end|>";
-const TURN_END: &str = "<|return|>";
+pub(crate) const TURN_END: &str = "<|return|>";
 const HANDOFF: &str = "<|call|>";
 const CONTROL_MARKERS: &[&str] = &[
     START,
