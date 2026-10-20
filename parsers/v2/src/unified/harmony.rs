@@ -142,6 +142,25 @@ enum Route {
     Suppress,
 }
 
+fn implicit_recipient_prefix(text: &str) -> bool {
+    let trimmed = text.trim_start();
+    trimmed.is_empty()
+        || "to=".starts_with(trimmed)
+        || trimmed.strip_prefix("to=").is_some_and(|recipient| {
+            recipient
+                .trim_end()
+                .chars()
+                .all(|ch| ch.is_alphanumeric() || matches!(ch, '_' | '.' | '-'))
+        })
+}
+
+struct QuotedControlTail {
+    tokens: Vec<u32>,
+    content: String,
+    utf8: Vec<u8>,
+    boundary: crate::tool_calling::scan::JsonValueBoundary,
+}
+
 struct HarmonyRuntime {
     encoding: HarmonyEncoding,
     allow_implicit_channel_header: bool,
@@ -157,8 +176,8 @@ struct HarmonyRuntime {
     call_content: String,
     call_cursor: Option<super::GuidedJsonCursor>,
     active_call_index: usize,
-    call_json_string: bool,
-    call_json_escape: bool,
+    call_json: crate::tool_calling::scan::JsonValueBoundary,
+    quoted_control_tail: Option<QuotedControlTail>,
     next_call_index: usize,
     text_pending: String,
     outside_pending: Vec<u32>,
@@ -190,8 +209,8 @@ impl HarmonyRuntime {
             call_content: String::new(),
             call_cursor: None,
             active_call_index: 0,
-            call_json_string: false,
-            call_json_escape: false,
+            call_json: Default::default(),
+            quoted_control_tail: None,
             next_call_index: 0,
             text_pending: String::new(),
             outside_pending: Vec::new(),
@@ -212,7 +231,11 @@ impl HarmonyRuntime {
             {
                 return Route::Tool(name.to_string());
             }
-            return Route::Suppress;
+            // openai-harmony 0.0.8 reports a lone content-type field as a
+            // recipient. It must not suppress a response_format final message.
+            if !recipient.starts_with(FORMAT) {
+                return Route::Suppress;
+            }
         }
         if self.parser.current_channel().as_deref() == Some("analysis") {
             Route::Reasoning
@@ -327,17 +350,34 @@ impl HarmonyRuntime {
     fn process_token(&mut self, id: u32, output: &mut UnifiedParserOutput) -> Result<()> {
         if !self.inside_message {
             if id == self.start_id {
+                if !self.outside_pending.is_empty() {
+                    match self.encoding.tokenizer().decode_utf8(&self.outside_pending) {
+                        Ok(text) => output.push_text(text),
+                        Err(_) => tracing::warn!(
+                            why = "incomplete_harmony_utf8",
+                            skipped_tokens = self.outside_pending.len(),
+                            "discarded an incomplete UTF-8 fragment before a new message"
+                        ),
+                    }
+                    self.outside_pending.clear();
+                }
                 self.inside_message = true;
                 self.process_parser_token(id, output)?;
             } else if self.allow_implicit_channel_header
-                && self.marker_ids.get(&id).copied() == Some(CHANNEL)
+                && (self.marker_ids.get(&id).copied() == Some(CHANNEL)
+                    || (!self.outside_pending.is_empty()
+                        && matches!(self.marker_ids.get(&id).copied(), Some(MESSAGE | FORMAT))))
             {
+                let pending = std::mem::take(&mut self.outside_pending);
                 let prefix = self
                     .encoding
                     .tokenizer()
                     .encode_with_special_tokens(&format!("{START}assistant"));
                 for prefix_id in prefix {
                     self.process_token(prefix_id, output)?;
+                }
+                for pending_id in pending {
+                    self.process_token(pending_id, output)?;
                 }
                 self.process_token(id, output)?;
             } else if let Some(marker) = self.marker_ids.get(&id) {
@@ -350,6 +390,9 @@ impl HarmonyRuntime {
             } else {
                 self.outside_pending.push(id);
                 if let Ok(text) = self.encoding.tokenizer().decode_utf8(&self.outside_pending) {
+                    if self.allow_implicit_channel_header && implicit_recipient_prefix(&text) {
+                        return Ok(());
+                    }
                     self.outside_pending.clear();
                     output.push_text(text);
                 }
@@ -357,12 +400,33 @@ impl HarmonyRuntime {
             return Ok(());
         }
 
+        if self.quoted_control_tail.is_some() {
+            return self.buffer_quoted_control(id, output);
+        }
+
         let marker_text = self.marker_ids.get(&id).copied();
+        if !self.legacy_tool_compatibility
+            && self.in_body
+            && matches!(self.route, Some(Route::Tool(_)))
+            && self.call_json.inside_string()
+            && matches!(marker_text, Some(START | MESSAGE_END | TURN_END | HANDOFF))
+        {
+            // A control token can be quoted data or a boundary after malformed
+            // JSON. Keep only that ambiguous tail until valid JSON or EOF settles it.
+            self.quoted_control_tail = Some(QuotedControlTail {
+                tokens: Vec::new(),
+                content: String::new(),
+                utf8: Vec::new(),
+                boundary: self.call_json.clone(),
+            });
+            return self.buffer_quoted_control(id, output);
+        }
+
         // The legacy API treated a real handoff token as the call boundary even
         // when malformed JSON left its string unterminated.
         if self.in_body
             && matches!(self.route, Some(Route::Tool(_)))
-            && self.call_json_string
+            && self.call_json.inside_string()
             && !(self.legacy_tool_compatibility && id == self.handoff_id)
             && let Some(marker) = marker_text
         {
@@ -383,8 +447,7 @@ impl HarmonyRuntime {
             self.in_body = false;
             self.route = None;
             self.call_content.clear();
-            self.call_json_string = false;
-            self.call_json_escape = false;
+            self.call_json = Default::default();
             self.process_parser_token(id, output)?;
             return Ok(());
         }
@@ -407,8 +470,7 @@ impl HarmonyRuntime {
             self.in_body = false;
             self.route = None;
             self.call_content.clear();
-            self.call_json_string = false;
-            self.call_json_escape = false;
+            self.call_json = Default::default();
             return Ok(());
         }
 
@@ -424,8 +486,7 @@ impl HarmonyRuntime {
                 self.call_cursor = Some(super::GuidedJsonCursor::named(name));
             }
             self.call_content.clear();
-            self.call_json_string = false;
-            self.call_json_escape = false;
+            self.call_json = Default::default();
         }
 
         if self.in_body
@@ -435,7 +496,7 @@ impl HarmonyRuntime {
                 Route::Reasoning => output.push_reasoning(delta),
                 Route::Text => output.push_text(delta),
                 Route::Tool(_) => {
-                    self.update_json_string_state(&delta);
+                    self.advance_call_json(&delta);
                     self.call_content.push_str(&delta);
                     if let Some(cursor) = &mut self.call_cursor {
                         let mut calls = Vec::new();
@@ -453,7 +514,13 @@ impl HarmonyRuntime {
         let messages = self.parser.messages().len();
         if messages > prior_messages {
             if let Some(Route::Tool(name)) = self.route.clone() {
-                if id == self.handoff_id {
+                if id == self.handoff_id
+                    || (!self.legacy_tool_compatibility
+                        && matches!(
+                            self.marker_ids.get(&id).copied(),
+                            Some(MESSAGE_END | TURN_END)
+                        ))
+                {
                     self.finish_tool_call(&name, output);
                 } else {
                     tracing::warn!(
@@ -467,22 +534,98 @@ impl HarmonyRuntime {
             self.in_body = false;
             self.route = None;
             self.call_content.clear();
-            self.call_json_string = false;
-            self.call_json_escape = false;
+            self.call_json = Default::default();
         }
         Ok(())
     }
 
-    fn update_json_string_state(&mut self, text: &str) {
-        for ch in text.chars() {
-            if self.call_json_escape {
-                self.call_json_escape = false;
-            } else if ch == '\\' && self.call_json_string {
-                self.call_json_escape = true;
-            } else if ch == '"' {
-                self.call_json_string = !self.call_json_string;
+    fn advance_call_json(&mut self, text: &str) {
+        for character in text.chars() {
+            self.call_json.advance(character);
+        }
+    }
+
+    fn buffer_quoted_control(&mut self, id: u32, output: &mut UnifiedParserOutput) -> Result<()> {
+        let tail = self
+            .quoted_control_tail
+            .as_mut()
+            .expect("quoted tail exists");
+        tail.tokens.push(id);
+        let bytes = self.encoding.tokenizer().decode_bytes([id])?;
+        let (text, invalid) = take_utf8_prefix(&mut tail.utf8, &bytes);
+        if let Some(replaced_bytes) = invalid {
+            tracing::warn!(
+                why = "invalid_harmony_token_utf8",
+                replaced_bytes,
+                "replaced an invalid Harmony token fragment"
+            );
+        }
+        let mut complete = false;
+        for character in text.chars() {
+            complete |= tail.boundary.advance(character);
+        }
+        tail.content.push_str(&text);
+        if complete {
+            let candidate = format!("{}{}", self.call_content, tail.content);
+            if serde_json::from_str::<Value>(&candidate).is_ok() {
+                let tail = self.quoted_control_tail.take().expect("quoted tail exists");
+                for token in tail.tokens {
+                    if let Some(marker) = self.marker_ids.get(&token) {
+                        for ordinary in self.encoding.tokenizer().encode_ordinary(marker) {
+                            self.process_parser_token(ordinary, output)?;
+                        }
+                    } else {
+                        self.process_parser_token(token, output)?;
+                    }
+                }
             }
         }
+        Ok(())
+    }
+
+    fn recover_quoted_control(&mut self, output: &mut UnifiedParserOutput) -> Result<()> {
+        let Some(tail) = self.quoted_control_tail.take() else {
+            return Ok(());
+        };
+        let mut candidate = None;
+        let mut start = None;
+        for (at, &token) in tail.tokens.iter().enumerate() {
+            if token == self.start_id {
+                candidate = Some(at);
+            } else if token == self.message_id
+                && let Some(header_start) = candidate.take()
+                && let Ok(header) = self
+                    .encoding
+                    .tokenizer()
+                    .decode_utf8(&tail.tokens[header_start + 1..at])
+                && header
+                    .split(|ch: char| ch.is_whitespace() || ch == '<')
+                    .next()
+                    == Some("assistant")
+            {
+                start = Some(header_start);
+                break;
+            }
+        }
+        tracing::warn!(
+            why = "malformed_harmony_quoted_control",
+            skipped_bytes = self.call_content.len(),
+            recovered_tokens = start.map_or(0, |at| tail.tokens.len() - at),
+            "settled an ambiguous Harmony boundary after malformed JSON"
+        );
+        self.parser = StreamableParser::new(self.encoding.clone(), None)?;
+        self.inside_message = false;
+        self.in_body = false;
+        self.route = None;
+        self.call_content.clear();
+        self.call_cursor = None;
+        self.call_json = Default::default();
+        if let Some(start) = start {
+            for id in tail.tokens[start..].iter().copied() {
+                self.process_token(id, output)?;
+            }
+        }
+        Ok(())
     }
 
     fn finish_tool_call(&mut self, name: &str, output: &mut UnifiedParserOutput) {
@@ -507,8 +650,8 @@ impl HarmonyRuntime {
                 tool_index: self.active_call_index,
                 name: committed.is_none().then(|| name.to_string()),
                 arguments: committed
-                    .map_or(arguments.as_str(), |call| {
-                        &self.call_content[call.released..]
+                    .map_or(arguments.as_str(), |_call| {
+                        &self.call_content[cursor.released_end()..]
                     })
                     .to_string(),
                 complete: true,
@@ -538,6 +681,9 @@ impl HarmonyRuntime {
                 self.process_token(id, output)?;
             }
         }
+        while self.quoted_control_tail.is_some() {
+            self.recover_quoted_control(output)?;
+        }
         if !self.outside_pending.is_empty() {
             match self.encoding.tokenizer().decode_utf8(&self.outside_pending) {
                 Ok(text) => output.push_text(text),
@@ -560,20 +706,14 @@ impl HarmonyRuntime {
         Ok(())
     }
 
-    fn reset(&mut self, starting_state: UnifiedParserStartingState) -> Result<String> {
+    fn take_pending_text(&mut self) -> String {
         let mut recovered = std::mem::take(&mut self.text_pending);
         if !self.outside_pending.is_empty()
             && let Ok(text) = self.encoding.tokenizer().decode_utf8(&self.outside_pending)
         {
             recovered.push_str(&text);
         }
-        *self = Self::new(
-            self.encoding.clone(),
-            self.allow_implicit_channel_header,
-            self.legacy_tool_compatibility,
-        )?;
-        self.begin_prefilled_message(starting_state)?;
-        Ok(recovered)
+        recovered
     }
 }
 
@@ -850,7 +990,7 @@ impl NativeUnified for HarmonyNative {
                 let recovered = self
                     .runtime
                     .as_mut()
-                    .and_then(|runtime| runtime.reset(self.init.starting_state).ok())
+                    .map(HarmonyRuntime::take_pending_text)
                     .unwrap_or_default();
                 self.runtime = Some(runtime);
                 recovered
@@ -2081,5 +2221,293 @@ mod tests {
                 arguments: serde_json::from_str(&arguments).unwrap(),
             }]
         );
+    }
+
+    fn assert_native_splits(input: &str, expected: &[UnifiedEvent]) {
+        let mut parser = gpt_oss_unified(&[]);
+        for split in input.char_indices().map(|(at, _)| at).chain([input.len()]) {
+            parser.reset();
+            parser.initialize(&[]).unwrap();
+            let mut events = parser.push(&input[..split]).unwrap();
+            events.extend(parser.push(&input[split..]).unwrap());
+            events.extend(parser.finish().unwrap().events);
+            assert_eq!(
+                crate::unified::assemble(&events),
+                expected,
+                "text split={split}"
+            );
+        }
+        let ids = encode_harmony(input).unwrap();
+        for split in 0..=ids.len() {
+            parser.reset();
+            parser.initialize(&[]).unwrap();
+            let mut events = parser.push_tokens(&ids[..split]).unwrap();
+            events.extend(parser.push_tokens(&ids[split..]).unwrap());
+            events.extend(parser.finish().unwrap().events);
+            assert_eq!(
+                crate::unified::assemble(&events),
+                expected,
+                "token split={split}"
+            );
+        }
+    }
+
+    #[test]
+    fn native_argument_offsets_include_leading_whitespace() {
+        for whitespace in ["", " ", "\t", "\r\n", "  \n\t"] {
+            let input = format!(
+                "{START}assistant{CHANNEL}commentary to=functions.lookup {FORMAT}json{MESSAGE}{whitespace}{{\"q\":\"x\"}}{HANDOFF}"
+            );
+            assert_native_splits(
+                &input,
+                &[UnifiedEvent::ToolCall {
+                    name: "lookup".into(),
+                    arguments: serde_json::json!({"q":"x"}),
+                }],
+            );
+        }
+    }
+
+    #[test]
+    fn content_type_header_retains_final_content() {
+        let input =
+            format!("{START}assistant{CHANNEL}final {FORMAT}json{MESSAGE}{{\"a\":1}}{TURN_END}");
+        assert_native_splits(
+            &input,
+            &[UnifiedEvent::Text {
+                text: "{\"a\":1}".into(),
+            }],
+        );
+    }
+
+    #[test]
+    fn implicit_recipient_first_header_is_not_visible_text() {
+        let input = format!(
+            " to=functions.lookup{CHANNEL}commentary {FORMAT}json{MESSAGE}{{\"q\":\"x\"}}{HANDOFF}"
+        );
+        assert_native_splits(
+            &input,
+            &[UnifiedEvent::ToolCall {
+                name: "lookup".into(),
+                arguments: serde_json::json!({"q":"x"}),
+            }],
+        );
+    }
+
+    #[test]
+    fn malformed_string_does_not_erase_following_message() {
+        let input = format!(
+            "{START}assistant to=functions.lookup {FORMAT}json{MESSAGE}{{\"q\":\"abc{HANDOFF}{START}assistant{CHANNEL}final{MESSAGE}Answer{TURN_END}"
+        );
+        assert_native_splits(
+            &input,
+            &[UnifiedEvent::Text {
+                text: "Answer".into(),
+            }],
+        );
+    }
+
+    #[test]
+    fn quoted_complete_headers_remain_argument_data() {
+        for boundary in [START, MESSAGE_END, TURN_END, HANDOFF] {
+            for prefix in ["", "escaped \\\"", "backslash \\\\"] {
+                let value = format!(
+                    "{prefix}é{boundary}{START}assistant{CHANNEL}final{MESSAGE}literal{TURN_END}끝"
+                );
+                let args = serde_json::json!({"before":"", "q":value, "after":true});
+                let input = format!(
+                    "{START}assistant to=functions.lookup{CHANNEL}commentary{MESSAGE}{args}{HANDOFF}"
+                );
+                assert_native_splits(
+                    &input,
+                    &[UnifiedEvent::ToolCall {
+                        name: "lookup".into(),
+                        arguments: args,
+                    }],
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn malformed_quoted_boundaries_preserve_later_assistant_channels() {
+        for boundary in [START, MESSAGE_END, TURN_END, HANDOFF] {
+            let next = if boundary == START { "" } else { START };
+            let input = format!(
+                "{START}assistant to=functions.lookup{MESSAGE}{{\"q\":\"abc{boundary}{next}assistant{CHANNEL}analysis{MESSAGE}checking{MESSAGE_END}{START}assistant{CHANNEL}final {FORMAT}json{MESSAGE}{{\"a\":1}}{TURN_END}"
+            );
+            assert_native_splits(
+                &input,
+                &[
+                    UnifiedEvent::Reasoning {
+                        text: "checking".into(),
+                    },
+                    UnifiedEvent::Text {
+                        text: "{\"a\":1}".into(),
+                    },
+                ],
+            );
+        }
+    }
+
+    #[test]
+    fn native_complete_message_boundaries_and_invalid_provisional_calls() {
+        for end in [HANDOFF, MESSAGE_END, TURN_END] {
+            let header = format!("{START}assistant to=functions.lookup{MESSAGE}");
+            let mut parser = gpt_oss_unified(&[]);
+            parser.initialize(&[]).unwrap();
+            let first = parser.push(&format!("{header}{{\"q\":\"first")).unwrap();
+            assert!(first.iter().any(|event| matches!(event, UnifiedParserEvent::ToolCall(call) if !call.complete && call.arguments.contains("first"))));
+            let mut events = first;
+            events.extend(parser.push(&format!(" second\"}}{end}")).unwrap());
+            events.extend(parser.finish().unwrap().events);
+            assert_eq!(
+                crate::unified::assemble(&events),
+                vec![UnifiedEvent::ToolCall {
+                    name: "lookup".into(),
+                    arguments: serde_json::json!({"q":"first second"})
+                }]
+            );
+            assert_eq!(
+                events
+                    .iter()
+                    .filter(
+                        |event| matches!(event, UnifiedParserEvent::ToolCall(call) if call.complete)
+                    )
+                    .count(),
+                1
+            );
+            let input = format!(
+                "{header}{{\"q\":\"x\"}} oops{end}{START}assistant{CHANNEL}final{MESSAGE}done{TURN_END}"
+            );
+            assert_native_splits(
+                &input,
+                &[UnifiedEvent::Text {
+                    text: "done".into(),
+                }],
+            );
+            let invalid = parse_text(&input, UnifiedParserStartingState::None);
+            assert!(invalid.iter().any(
+                |event| matches!(event, UnifiedParserEvent::ToolCall(call) if !call.complete)
+            ));
+            assert!(invalid.iter().all(
+                |event| !matches!(event, UnifiedParserEvent::ToolCall(call) if call.complete)
+            ));
+        }
+    }
+
+    #[test]
+    fn quoted_argument_tail_handles_short_chunks_long_fields_and_reuse() {
+        let marker = format!("{HANDOFF}{START}assistant{CHANNEL}final{MESSAGE}quoted{TURN_END}");
+        let long = "quote \\\" slash \\\\ é🙂 ".repeat(128);
+        for position in 0..3 {
+            let mut fields = vec![
+                serde_json::json!(marker).to_string(),
+                "\"\"".into(),
+                "true".into(),
+            ];
+            fields.insert(position, serde_json::json!(long).to_string());
+            let body = format!(
+                "{{{}}}",
+                fields
+                    .iter()
+                    .enumerate()
+                    .map(|(i, v)| format!("\"k{i}\":{v}"))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            );
+            let input = format!("{START}assistant to=functions.lookup{MESSAGE}{body}{HANDOFF}");
+            let expected = vec![UnifiedEvent::ToolCall {
+                name: "lookup".into(),
+                arguments: serde_json::from_str(&body).unwrap(),
+            }];
+            let mut parser = gpt_oss_unified(&[]);
+            for chunk_size in [1, 17, 128] {
+                parser.reset();
+                parser.initialize(&[]).unwrap();
+                let mut events = Vec::new();
+                let chars = input
+                    .char_indices()
+                    .map(|(at, _)| at)
+                    .chain([input.len()])
+                    .collect::<Vec<_>>();
+                for indexes in chars.windows(chunk_size + 1).step_by(chunk_size) {
+                    events.extend(
+                        parser
+                            .push(&input[indexes[0]..*indexes.last().unwrap()])
+                            .unwrap(),
+                    );
+                }
+                let consumed = ((chars.len() - 1) / chunk_size) * chunk_size;
+                if consumed < chars.len() - 1 {
+                    events.extend(parser.push(&input[chars[consumed]..]).unwrap());
+                }
+                events.extend(parser.finish().unwrap().events);
+                assert_eq!(
+                    crate::unified::assemble(&events),
+                    expected,
+                    "position={position}, chars={chunk_size}"
+                );
+                parser.reset();
+                parser.initialize(&[]).unwrap();
+                let mut events = Vec::new();
+                for ids in encode_harmony(&input).unwrap().chunks(chunk_size) {
+                    events.extend(parser.push_tokens(ids).unwrap());
+                }
+                events.extend(parser.finish().unwrap().events);
+                assert_eq!(
+                    crate::unified::assemble(&events),
+                    expected,
+                    "position={position}, tokens={chunk_size}"
+                );
+            }
+            let scalar = serde_json::json!(marker).to_string();
+            assert_native_splits(
+                &format!("{START}assistant to=functions.lookup{MESSAGE}{scalar}{HANDOFF}"),
+                &[UnifiedEvent::ToolCall {
+                    name: "lookup".into(),
+                    arguments: serde_json::json!(marker),
+                }],
+            );
+        }
+    }
+
+    #[test]
+    fn recipient_looking_plaintext_resumes_before_finish() {
+        // Assembled corpus GOLDEN cannot express this pre-finish progress deadline.
+        for prose in [
+            "today is clear",
+            "to=functions.lookup ordinary prose",
+            "to=functions.bad/name prose",
+            " to=functions.lookup\nnow prose",
+        ] {
+            let mut parser = gpt_oss_unified(&[]);
+            parser.initialize(&[]).unwrap();
+            let mut events = Vec::new();
+            for character in prose.chars() {
+                events.extend(parser.push(&character.to_string()).unwrap());
+            }
+            assert_eq!(
+                crate::unified::assemble(&events),
+                vec![UnifiedEvent::Text { text: prose.into() }]
+            );
+            assert!(parser.finish().unwrap().events.is_empty());
+        }
+    }
+
+    #[test]
+    fn repeated_ambiguous_starts_recover_only_the_complete_following_header() {
+        for count in [1, 64, 2048] {
+            let input = format!(
+                "{START}assistant to=functions.lookup{MESSAGE}{{\"q\":\"abc{}{START}assistant{CHANNEL}final{MESSAGE}Answer{TURN_END}",
+                START.repeat(count)
+            );
+            assert_eq!(
+                crate::unified::assemble(&parse_text(&input, UnifiedParserStartingState::None)),
+                vec![UnifiedEvent::Text {
+                    text: "Answer".into()
+                }]
+            );
+        }
     }
 }

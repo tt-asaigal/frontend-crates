@@ -3730,6 +3730,55 @@ impl GuidedState {
         (marker, pending)
     }
 
+    fn consume_response_control(
+        &mut self,
+        at: usize,
+        len: usize,
+        flush: bool,
+        output: &mut Vec<UnifiedParserEvent>,
+    ) -> bool {
+        let end = at + len;
+        let preserves_markers = self.reasoning.preserves_response_markers();
+        if !preserves_markers
+            && self
+                .native_header
+                .waits_for_following_content(&self.input[at..], len, flush)
+        {
+            return false;
+        }
+        let start = if preserves_markers {
+            let prefix = self.input[..at].to_string();
+            if self.invalid_payload == InvalidGuidedPayloadPolicy::Reject {
+                if !self.response_prefill_prose.is_empty()
+                    || self.response_prefill_text_emitted
+                    || !prefix.trim().is_empty()
+                {
+                    self.response_prefill_prose.push_str(&prefix);
+                }
+            } else {
+                self.push_response_prose(output, &prefix);
+            }
+            self.response_prefill_after_marker = true;
+            0
+        } else {
+            at
+        };
+        let whitespace = if preserves_markers {
+            0
+        } else {
+            self.input[end..].len() - self.input[end..].trim_start().len()
+        };
+        self.prose.consume_recovery(
+            &self.input[at..end],
+            self.grammar.invoke_start_for(&self.input[at..end]),
+        );
+        self.input.drain(start..end + whitespace);
+        self.stripped_markup = true;
+        self.reset_invoke_candidate();
+        self.response_prefill_probe.reset();
+        true
+    }
+
     fn response_prefix_holdback(&self, text: &str, flush: bool) -> usize {
         guided_holdback_len_for_grammar(
             text,
@@ -4424,27 +4473,9 @@ impl GuidedState {
                                     self.response_control_before_json(&input, flush);
                                 self.input = input;
                                 if let Some((at, len)) = marker {
-                                    let end = at + len;
-                                    let prefix = self.input[..at].to_string();
-                                    if self.invalid_payload == InvalidGuidedPayloadPolicy::Reject {
-                                        if !self.response_prefill_prose.is_empty()
-                                            || self.response_prefill_text_emitted
-                                            || !prefix.trim().is_empty()
-                                        {
-                                            self.response_prefill_prose.push_str(&prefix);
-                                        }
-                                    } else {
-                                        self.push_response_prose(&mut output, &prefix);
+                                    if !self.consume_response_control(at, len, flush, &mut output) {
+                                        break;
                                     }
-                                    self.prose.consume_recovery(
-                                        &self.input[at..end],
-                                        self.grammar.invoke_start_for(&self.input[at..end]),
-                                    );
-                                    self.input.drain(..end);
-                                    self.stripped_markup = true;
-                                    self.response_prefill_after_marker = true;
-                                    self.reset_invoke_candidate();
-                                    self.response_prefill_probe.reset();
                                     continue;
                                 }
                                 if pending {
@@ -4463,17 +4494,9 @@ impl GuidedState {
                                     self.response_control_before_json(&input, flush);
                                 self.input = input;
                                 if let Some((at, len)) = marker {
-                                    let end = at + len;
-                                    let whitespace = self.input[end..].len()
-                                        - self.input[end..].trim_start().len();
-                                    self.prose.consume_recovery(
-                                        &self.input[at..end],
-                                        self.grammar.invoke_start_for(&self.input[at..end]),
-                                    );
-                                    self.input.drain(at..end + whitespace);
-                                    self.stripped_markup = true;
-                                    self.reset_invoke_candidate();
-                                    self.response_prefill_probe.reset();
+                                    if !self.consume_response_control(at, len, flush, &mut output) {
+                                        break;
+                                    }
                                     continue;
                                 }
                                 if pending {
@@ -4522,24 +4545,14 @@ impl GuidedState {
                                         &self.grammar.invoke_end,
                                         flush,
                                     ) {
-                                        let end = at + len;
-                                        if self.native_header.waits_for_following_content(
-                                            &self.input[at..],
+                                        if !self.consume_response_control(
+                                            at,
                                             len,
                                             flush,
+                                            &mut output,
                                         ) {
                                             break;
                                         }
-                                        let whitespace = self.input[end..].len()
-                                            - self.input[end..].trim_start().len();
-                                        self.prose.consume_recovery(
-                                            &self.input[at..end],
-                                            self.grammar.invoke_start_for(&self.input[at..end]),
-                                        );
-                                        self.input.drain(at..end + whitespace);
-                                        self.stripped_markup = true;
-                                        self.reset_invoke_candidate();
-                                        self.response_prefill_probe.reset();
                                         continue;
                                     }
                                     self.native_header.holdback_len = self.input.len() - at;
@@ -6989,6 +7002,44 @@ mod tests {
                     state,
                     &[UnifiedEvent::Reasoning {
                         text: "前é  後🙂".into(),
+                    }],
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn guided_native_response_prefix_whitespace_is_split_invariant() {
+        for (family, native) in [
+            (
+                "glm47",
+                "<tool_call>f<arg_key>x</arg_key><arg_value>{\"city\":\"Rome\"}</arg_value></tool_call>",
+            ),
+            (
+                "deepseek_v4",
+                "<｜DSML｜invoke name=\"f\"><｜DSML｜parameter name=\"x\" string=\"false\">{\"city\":\"Rome\"}</｜DSML｜parameter></｜DSML｜invoke>",
+            ),
+            (
+                "deepseek_v41",
+                "<｜DSML｜ invoke name=\"f\"><｜DSML｜ parameter name=\"x\" string=\"false\">{\"city\":\"Rome\"}</｜DSML｜ parameter></｜DSML｜ invoke>",
+            ),
+            (
+                "qwen3",
+                "<function=f><parameter=x>{\"city\":\"Rome\"}</parameter></function>",
+            ),
+            (
+                "muse_glimmer",
+                "<atem:invoke name=\"f\"><atem:parameter name=\"x\">{\"city\":\"Rome\"}</atem:parameter></atem:invoke>",
+            ),
+        ] {
+            for whitespace in [" ", "\n\t ", "\u{2003}"] {
+                let prefix = format!("{native}{whitespace}ok then ");
+                assert_guided_envelope_matrix(
+                    family,
+                    &prefix,
+                    UnifiedParserStartingState::Response,
+                    &[UnifiedEvent::Text {
+                        text: "ok then ".into(),
                     }],
                 );
             }

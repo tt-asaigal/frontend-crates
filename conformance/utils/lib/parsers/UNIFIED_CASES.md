@@ -31,6 +31,8 @@ golden:
 
 Comparison is ORDER-SENSITIVE on the ASSEMBLED list. Streaming delta granularity may differ across engines; the assembled event list is the invariant (same principle as the tool-call chunk sweep).
 
+Raw streaming tool deltas with `complete: false` are provisional. A malformed or truncated call can leave those bytes on the wire without ever completing; consumers must wait for `complete: true` before treating a call as executable. Dropping an incomplete call during assembly does not retract its earlier fragments.
+
 ## Invariants (every correct implementation must satisfy)
 
 - **I1 Faithful segmentation** — every model byte is exactly one of reasoning / visible text / tool-call structure / control marker. Markers are consumed; nothing else dropped or duplicated.
@@ -148,9 +150,9 @@ Every active Unified ID uses `UNIFIED.<group>-<description>`, for example `UNIFI
 - **`12-tool_in_reason_with_text`** (`tool_in_reason_with_text`) 12-2 WITH visible narration before and after — text → reason → call → reason → text. Golden breaks out and keeps the surrounding text; engines leak the nested markup. Class LEAK.
 
 ### DeepSeek V4.1 applicability
-- DeepSeek V4.1 uses the ordered Unified contract for native DSML calls, reasoning interleaving, guided JSON, and prefilled states. The current corpus emits 241 of the 326 taxonomy cases for this family.
+- DeepSeek V4.1 uses the ordered Unified contract for native DSML calls, reasoning interleaving, guided JSON, and prefilled states. The current corpus emits 242 of the 333 taxonomy cases for this family.
 - Generated cases include `30-guided_json_gt_in_argument_bare_opener`, the single-family `deepseek-json_invocation_body` case, applicable Guided Decoding cases in groups 31 through 35 (exclusions listed below), the marker-discriminating Response row `50-prefilled_response_reasoning_markers_literal`, and the 40-series cases `40-prefilled_reasoning_with_guided_json`, `40-native_quoted_control_in_reasoning`, and `40-native_single_quote_contraction_reasoning`, plus `41-prefilled_reasoning_redundant_opener` through `41-prefilled_reasoning_truncated`.
-- The 85 omitted cases require another family's framing or schema, or repeat a transition already covered for DeepSeek V4.1. Family applicability comes from `scenario_families()` and the serialized request. Family-specific grammars and schemas require explicit exclusions; Response-prefilled native object, array, and string ownership now cover each applicable native family. Prefilled rows that duplicate another state transition remain excluded for DeepSeek V4.1.
+- The 91 omitted cases require another family's framing or schema, or repeat a transition already covered for DeepSeek V4.1. Family applicability comes from `scenario_families()` and the serialized request. Family-specific grammars and schemas require explicit exclusions; Response-prefilled native object, array, and string ownership now cover each applicable native family. Prefilled rows that duplicate another state transition remain excluded for DeepSeek V4.1.
 
 - `30-guided_json_gt_in_argument_bare_opener` retains the historical bare header with no tool name. `34-guided_json_narrated_invoke_in_reasoning` uses an unfinished DSML invoke header inside reasoning rather than a completed calls-block opener.
 
@@ -335,6 +337,8 @@ Groups 1–12 vary the model OUTPUT. Groups 30–39 vary Guided Decoding request
 
 The shared `35-guided_json_native_parameter_object_before_payload`, `35-guided_json_native_parameter_array_before_payload`, `35-guided_json_native_parameter_string_before_payload`, and `35-guided_json_noncall_before_native_array_before_payload` cases place native argument data before the real guided call. Only the final Paris call dispatches. These cases test lexical ownership, including arguments that do not satisfy the offered native schema. A preceding non-call JSON value remains visible without releasing later native arguments to the guided scanner.
 
+- **`35-guided_response_native_wrapper_whitespace_before_prose`** tests all nine families in Response-prefilled guided mode: suppress a native invocation wrapper and its structural whitespace, preserve the following prose, then dispatch only the guided call. Muse uses the inner ATEM invocation; full routed-message recovery is a separate contract. The native argument tests lexical ownership rather than offered-schema validation.
+
 ### Group 36 — Guided Decoding: response schemas after reasoning
 
 - **`36-structured_response_after_reasoning`** (`structured_response_after_reasoning`) No-tools response schema with non-JSON Unicode reasoning followed by a constrained weather object. The request carries `init.structural_tag.schema` and complete rejected streams. Capture, parity, and rendering build the actual family structural tag, check the accepted stream and every character split with XGrammar, reject malformed JSON, arrays, missing/extra keys and invalid enum values, then parse the accepted stream into separate reasoning and response events. GPT-OSS generates its analysis/final headers after the consumed assistant role; Qwen3, GLM and DeepSeek V4 begin in prompt-prefilled reasoning. DeepSeek V4.1, Gemma, Kimi and Muse are excluded because they have no registered structural-tag builder. Parser-only peer adapters report this generation contract as unsupported. Refs [Dynamo #16787](https://github.com/ai-dynamo/dynamo/issues/16787).
@@ -355,6 +359,17 @@ The shared `35-guided_json_native_parameter_object_before_payload`, `35-guided_j
 - **`50-prefilled_response_reasoning_markers_literal`** (`prefilled_response_reasoning_markers_literal`) `<think>literal</think>` must reach the user as TEXT, markers and all, because this stream has no reasoning channel. It is the direct visible-marker regression.
 
 The marker-free prefilled-Response variants were removed because they emitted the same observable result as their default-state peers. Group 50 retains reasoning-marker stimuli that distinguish Response from default initialization; the ordinary native, guided, multi-call, and malformed payload contracts remain covered by groups 8, 30, and 31.
+
+### GPT-OSS-specific
+
+These cases exercise Harmony message framing, which the other eight grammars do not use. Shared post-wrapper whitespace coverage stays in group 35.
+
+- **`gpt_oss-tool_body_whitespace`** preserves the native argument object when whitespace follows the Harmony message marker.
+- **`gpt_oss-constrained_final_header`** retains visible JSON under a final header whose only metadata is its constrained content type.
+- **`gpt_oss-implicit_recipient_first_header`** holds the generated recipient-first header until its message body opens, without prompt token IDs or leaked recipient text.
+- **`gpt_oss-quoted_truncated_tool_then_final`** recovers the later final answer after an unterminated native argument string; the ambiguous suffix stays buffered until EOF establishes that the original JSON cannot complete.
+- **`gpt_oss-quoted_message_header_literal`** is the valid counterfactual: a complete header inside a valid JSON string remains argument data.
+- **`gpt_oss-complete_alternate_message_ends`** recovers complete JSON calls closed by Harmony message-end or turn-end. The legacy tool adapter continues to require handoff, and malformed provisional calls never receive completion.
 
 ### DeepSeek V4-specific
 

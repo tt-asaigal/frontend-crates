@@ -1898,6 +1898,26 @@ def _guided_response_markup(fam, recipient, after_payload=False):
 
 
 
+EDGE.append((
+    "guided_response_native_wrapper_whitespace_before_prose",
+    "Response-prefilled guided output contains a native invocation wrapper, then whitespace and visible prose before the real guided call. "
+    "Muse uses its inner ATEM invocation, without a new recipient-routed message envelope. "
+    "Whitespace after the suppressed native wrapper is structural across every chunk boundary; the following prose remains visible. "
+    "The native Rome argument tests lexical ownership rather than validation against the offered schema; only the guided Paris call dispatches.",
+    ["I3", "I7"],
+    [{"kind": "text", "text": "ok then "},
+     {"kind": "tool_call", "name": "get_weather", "arguments": {"city": "Paris"}}],
+    {"starting_state": "Response", "tool_output_mode": "GuidedJson", "named_tool": None},
+    guided_surroundings(
+        lambda fam: (
+            r_bare_tool(fam, "f", "x", {"city": "Rome"}, 0) if fam == "muse_glimmer"
+            else r_tool_arguments(fam, "f", {"x": {"city": "Rome"}}, 0)
+        ) + " \n\t ok then " + GUIDED_ONE_CALL,
+        "native wrapper and following structural whitespace are suppressed; prose and guided call are preserved",
+    ),
+))
+
+
 for _shape, _body in (
     ("object", '{"city":"Rome"}'),
     ("array", '[{"name":"get_weather","arguments":{"city":"Rome"}}]'),
@@ -3039,6 +3059,34 @@ def _structured_response_case():
 
 
 EDGE.append(_structured_response_case())
+
+
+_GPT_OSS_REVIEW_CASES = (
+    ("gpt_oss_tool_body_whitespace", "Harmony native function message body starts with whitespace after the message marker. Cursor offsets must use the same raw-body coordinates as completion.",
+     '<|start|>assistant<|channel|>commentary to=functions.lookup <|constrain|>json<|message|> \n\t{"q":"x"}<|call|>',
+     [{"kind":"tool_call", "name":"lookup", "arguments":{"q":"x"}}]),
+    ("gpt_oss_constrained_final_header", "Harmony final header has a content type and no recipient. The JSON body stays visible response content; it is not a routed tool message.",
+     '<|start|>assistant<|channel|>final <|constrain|>json<|message|>{"a":1}<|return|>',
+     [{"kind":"text", "text":'{"a":1}'}]),
+    ("gpt_oss_implicit_recipient_first_header", "Harmony generated suffix begins with the recipient before its channel, without prompt token IDs. Hold the header until its message marker and dispatch the native call without leaking the recipient.",
+     ' to=functions.lookup<|channel|>commentary <|constrain|>json<|message|>{"q":"x"}<|call|>',
+     [{"kind":"tool_call", "name":"lookup", "arguments":{"q":"x"}}]),
+    ("gpt_oss_quoted_truncated_tool_then_final", "Harmony native arguments have an unterminated string before a handoff and a later complete assistant final message. At EOF discard the malformed call and recover the final answer.",
+     '<|start|>assistant to=functions.lookup <|constrain|>json<|message|>{"q":"abc<|call|><|start|>assistant<|channel|>final<|message|>Answer<|return|>',
+     [{"kind":"text", "text":"Answer"}]),
+    ("gpt_oss_quoted_message_header_literal", "A valid Harmony argument string quotes a handoff and complete assistant final header. JSON ownership keeps the quoted header literal; this is the valid counterfactual to malformed-string recovery.",
+     '<|start|>assistant to=functions.lookup<|message|>{"q":"<|call|><|start|>assistant<|channel|>final<|message|>literal<|return|>"}<|call|>',
+     [{"kind":"tool_call", "name":"lookup", "arguments":{"q":"<|call|><|start|>assistant<|channel|>final<|message|>literal<|return|>"}}]),
+    ("gpt_oss_complete_alternate_message_ends", "Harmony native function messages contain complete JSON and end with message-end or turn-end instead of handoff. Unified recovers both delimiter-complete calls; legacy missing-handoff behavior remains separate.",
+     '<|start|>assistant to=functions.lookup<|message|>{"q":"end"}<|end|><|start|>assistant to=functions.lookup<|message|>{"q":"return"}<|return|>',
+     [{"kind":"tool_call", "name":"lookup", "arguments":{"q":"end"}}, {"kind":"tool_call", "name":"lookup", "arguments":{"q":"return"}}]),
+)
+for _name, _description, _input, _golden in _GPT_OSS_REVIEW_CASES:
+    EDGE.append((
+        _name, _description, ["I3", "I5", "I7"], _golden,
+        {"starting_state":"None", "tool_output_mode":"Native", "named_tool":None},
+        OnlyFamilies({"gpt_oss": (_input, D("UNSUPPORTED", VLLM_UNCAPTURABLE["gpt_oss"]), M)}),
+    ))
 
 
 def build_cases(fam):

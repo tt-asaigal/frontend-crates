@@ -198,6 +198,12 @@ UNIFIED_TAX = {
     'gpt_oss_invalid_tool_body_then_empty_call': ("gpt_oss", "10"),
     'gpt_oss_invalid_tool_body_then_valid_call': ("gpt_oss", "11"),
     'gpt_oss_interrupted_reasoning_then_response': ("gpt_oss", "12"),
+    "gpt_oss_tool_body_whitespace": ("gpt_oss", "13"),
+    "gpt_oss_constrained_final_header": ("gpt_oss", "14"),
+    "gpt_oss_implicit_recipient_first_header": ("gpt_oss", "15"),
+    "gpt_oss_quoted_truncated_tool_then_final": ("gpt_oss", "16"),
+    "gpt_oss_quoted_message_header_literal": ("gpt_oss", "17"),
+    "gpt_oss_complete_alternate_message_ends": ("gpt_oss", "18"),
 
     # Group 40 — Prefilled reasoning, happy
     "prefilled_reasoning_with_tool": (40, "1"), "prefilled_reasoning_with_guided_json": (40, "2"),
@@ -341,6 +347,10 @@ for _scenario, _active in GPT_OSS_PR424_REQUEST_VARIANTS.items():
     ) + 1
     UNIFIED_TAX[_scenario + "_pr424"] = (_group, str(_next_sub))
 
+
+
+# Assign new numeric IDs after historical variants so their published ranks do not move.
+UNIFIED_TAX["guided_response_native_wrapper_whitespace_before_prose"] = (35, "12")
 
 
 # Historical requests remain separate executions, but share one semantic heading.

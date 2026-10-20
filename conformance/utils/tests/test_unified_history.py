@@ -3,6 +3,7 @@
 """Coverage for canonical Unified capture checkpoints."""
 
 import copy
+from dataclasses import replace
 import hashlib
 import json
 import sys
@@ -286,6 +287,30 @@ def test_materialization_reuses_supplied_store_without_mutating_it(tmp_path, mon
     } == {
         path.relative_to(supplied): path.read_bytes() for path in supplied.rglob("*.yaml")
     }
+    assert store == before
+
+
+def test_input_only_materialization_preserves_default_input_and_golden_bytes(tmp_path):
+    root = _store(tmp_path / "store")
+    store = unified_history.load_store(root)
+    before = copy.deepcopy(store)
+    default = tmp_path / "default"
+    inputs_only = tmp_path / "inputs-only"
+    unified_history.materialize_store(root, default, store=store)
+    unified_history.materialize_store(root, inputs_only, store=replace(store, histories={}))
+    expected = {
+        path.relative_to(default): path.read_bytes()
+        for directory in ("inputs", "golden")
+        for path in (default / directory).rglob("*.yaml")
+    }
+    assert expected
+    assert expected == {
+        path.relative_to(inputs_only): path.read_bytes()
+        for path in inputs_only.rglob("*.yaml")
+    }
+    for capture_id in store.histories[("gemma4", "dynamo_v2")].captures:
+        assert list((default / capture_id).rglob("*.yaml"))
+        assert not (inputs_only / capture_id).exists()
     assert store == before
 
 
