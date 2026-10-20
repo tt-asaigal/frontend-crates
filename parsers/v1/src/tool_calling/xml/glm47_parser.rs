@@ -794,8 +794,10 @@ fn schema_type_match(
         (left, right) => left.or(right),
     };
     // enum/const-derived type hint: a parameter declared only by its allowed values
-    // (`{"enum": [1, 2, 4]}`, `{"const": true}`, pydantic Literal / zod literal unions)
-    // admits the JSON types of those values. Integral numbers count as integer and number.
+    // (`{"enum": [1, 2, 4]}`, `{"const": true}`) admits the JSON types of those
+    // values; a declared `type` keeps its hint unchanged. Integral numbers count
+    // as integer and number. A string member matches only this exact value, so a
+    // union's numeric/structured alternative stays reachable for other text.
     let value_matches = |value: &Value| -> bool {
         match value {
             Value::Null => expected == "null",
@@ -804,34 +806,25 @@ fn schema_type_match(
                 expected == "number"
                     || (expected == "integer" && n.as_f64().is_some_and(|f| f.fract() == 0.0))
             }
-            Value::String(_) => expected == "string",
+            Value::String(member) => expected == "string" && member == raw,
             Value::Array(_) => expected == "array",
             Value::Object(_) => expected == "object",
         }
     };
-    let enum_hint = match schema.get("enum").and_then(Value::as_array) {
-        Some(values) if !values.is_empty() => {
-            // Mixed enums keep their string fallback. A string hint must match
-            // raw text so it cannot shadow another union branch.
-            if expected == "string" {
-                values
-                    .iter()
-                    .any(|value| value.as_str() == Some(raw))
-                    .then_some(true)
-            } else {
-                values.iter().try_fold(false, |matched, value| {
-                    (!value.is_string()).then(|| matched || value_matches(value))
-                })
-            }
-        }
+    let literal_hint = match (
+        schema.get("type"),
+        schema.get("enum").and_then(Value::as_array),
+        schema.get("const"),
+    ) {
+        (Some(_), _, _) => None,
+        (None, Some(values), _) if !values.is_empty() => Some(values.iter().any(value_matches)),
+        (None, _, Some(value)) => Some(value_matches(value)),
         _ => None,
     };
-    for literal_hint in [enum_hint, schema.get("const").map(value_matches)] {
-        hint = match (hint, literal_hint) {
-            (Some(left), Some(right)) => Some(left && right),
-            (left, right) => left.or(right),
-        };
-    }
+    hint = match (hint, literal_hint) {
+        (Some(left), Some(right)) => Some(left && right),
+        (left, right) => left.or(right),
+    };
     for keyword in ["anyOf", "oneOf", "allOf"] {
         let Some(options) = schema.get(keyword).and_then(Value::as_array) else {
             continue;
@@ -2484,6 +2477,10 @@ mod enum_const_type_hint {
             serde_json::json!(true)
         );
         assert_eq!(
+            run(serde_json::json!({"const":true}), "true"),
+            serde_json::json!(true)
+        );
+        assert_eq!(
             run(
                 serde_json::json!({"anyOf":[{"enum":[1,2,4]},{"type":"null"}]}),
                 "4"
@@ -2491,23 +2488,64 @@ mod enum_const_type_hint {
             serde_json::json!(4)
         );
         assert_eq!(
-            run(serde_json::json!({"enum":["{\"x\":1}"]}), "{\"x\":1}"),
-            serde_json::json!("{\"x\":1}")
+            run(
+                serde_json::json!({"anyOf":[{"enum":[1,2,4]},{"type":"null"}]}),
+                "null"
+            ),
+            serde_json::json!(null)
+        );
+        // string enums stay verbatim strings, including JSON-looking text
+        assert_eq!(
+            run(serde_json::json!({"enum":["fast","slow"]}), "fast"),
+            serde_json::json!("fast")
         );
         assert_eq!(
-            run(serde_json::json!({"enum":[1,"a"]}), "1"),
+            run(serde_json::json!({"enum":["1","2"]}), "1"),
             serde_json::json!("1")
         );
-    }
-
-    #[test]
-    fn string_enums_do_not_override_other_union_branches() {
+        assert_eq!(
+            run(serde_json::json!({"enum":["1","2"]}), "3"),
+            serde_json::json!("3")
+        );
+        // a string member claims the value only when it matches, so a union's
+        // numeric alternative stays reachable for non-members
+        let union = serde_json::json!({"anyOf":[{"enum":["auto","none"]},{"type":"integer"}]});
+        assert_eq!(run(union.clone(), "auto"), serde_json::json!("auto"));
+        assert_eq!(run(union.clone(), "1"), serde_json::json!(1));
+        let union = serde_json::json!({"anyOf":[{"enum":["1","2"]},{"type":"integer"}]});
+        assert_eq!(run(union.clone(), "1"), serde_json::json!("1"));
+        assert_eq!(run(union, "3"), serde_json::json!(3));
+        // mixed enums: a non-member string yields to the numeric member
+        assert_eq!(
+            run(serde_json::json!({"enum":[1,"a"]}), "1"),
+            serde_json::json!(1)
+        );
+        assert_eq!(
+            run(serde_json::json!({"enum":[1,"a"]}), "a"),
+            serde_json::json!("a")
+        );
+        // declared types unchanged
+        assert_eq!(
+            run(serde_json::json!({"type":["integer"]}), "30"),
+            serde_json::json!(30)
+        );
+        assert_eq!(
+            run(serde_json::json!({"type":"string"}), "7"),
+            serde_json::json!("7")
+        );
+        // a declared string type keeps the unrestricted string hint, even in a
+        // union (schema matrix case typed_enum_union)
         assert_eq!(
             run(
-                serde_json::json!({"anyOf":[{"enum":["auto"]},{"type":"integer"}]}),
+                serde_json::json!({"anyOf":[{"type":"string","enum":["auto"]},{"type":"integer"}]}),
                 "42"
             ),
-            serde_json::json!(42)
+            serde_json::json!("42")
+        );
+        // an enum that contradicts the declared type does not override it
+        assert_eq!(
+            run(serde_json::json!({"type":"string","enum":[1,2]}), "1"),
+            serde_json::json!("1")
         );
     }
 }
