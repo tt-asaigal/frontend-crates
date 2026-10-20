@@ -1551,6 +1551,15 @@ changes:
       unavailable:
         code: legacy_unclassified
         detail: split capture cannot apply the requested initialization
+  structured_response_after_reasoning:
+    case_key: UNIFIED.36-structured_response_after_reasoning
+    stimulus:
+      ref: current
+      semantic_sha256: 4a40fcc642ed050079f0a85b4da55975a2137e494e371b80d7631eb711ec582c
+    observation:
+      unavailable:
+        code: legacy_unclassified
+        detail: split capture cannot apply the requested initialization
   text_before_tool:
     case_key: UNIFIED.8.a
     stimulus:
@@ -2523,6 +2532,35 @@ metadata_changes:
       starting_state: Response
       tool_output_mode: GuidedJson
       named_tool: null
+  structured_response_after_reasoning:
+    init:
+      starting_state: Reasoning
+      tool_output_mode: Native
+      named_tool: null
+      structural_tag:
+        schema:
+          type: object
+          properties:
+            location:
+              type: string
+              enum:
+              - London
+              - New York
+            temperature:
+              type: number
+            conditions:
+              type: string
+          required:
+          - location
+          - temperature
+          - conditions
+          additionalProperties: false
+        rejected:
+        - Check London météo🙂 before answering; this is prose, not JSON.</think>[]
+        - 'Check London météo🙂 before answering; this is prose, not JSON.</think>{"location":'
+        - Check London météo🙂 before answering; this is prose, not JSON.</think>{"location":"Tokyo","temperature":12,"conditions":"cloudy"}
+        - Check London météo🙂 before answering; this is prose, not JSON.</think>{"location":"London"}
+        - Check London météo🙂 before answering; this is prose, not JSON.</think>{"location":"London","temperature":12,"conditions":"cloudy","analysis":"leaked"}
   text_before_tool:
     init:
       starting_state: None
@@ -2655,3 +2693,12 @@ document_overrides:
     parser_path: split
   retired__51_b:
     parser_path: split
+  structured_response_after_reasoning:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.1.23
+      capture_origin:
+        crate_version: 0.1.23
+        source_sha256: 39556a0ed199e16432022d545345590ca1252c68d04fe9076db1df4cd2221878
+        git_commit: c8f61cc959371c0fea993b920e3a097e86c6d05b
+      inherited_from: null

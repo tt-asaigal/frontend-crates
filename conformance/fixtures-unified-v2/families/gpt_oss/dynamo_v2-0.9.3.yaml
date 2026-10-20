@@ -2053,3 +2053,12 @@ document_overrides:
         git_commit: ad2f5bd97c13906223a8bcacc5e038b5281e8f2b
         source_sha256: 72aeff5c4163ec2bd37747938af8c2218753481900e5ea9ca5a78ba36a85f79e
       inherited_from: null
+  structured_response_after_reasoning:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.9.3
+      capture_origin:
+        crate_version: 0.9.3
+        source_sha256: 72aeff5c4163ec2bd37747938af8c2218753481900e5ea9ca5a78ba36a85f79e
+        git_commit: 20085e1cf3ad11b6b585398b1e47941ed8f566e1
+      inherited_from: null

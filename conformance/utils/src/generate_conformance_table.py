@@ -2491,6 +2491,7 @@ def _load_unified_fixtures(base: Path):
             "tools": _unified_case_schemas(inp, shared_schema_signature),
             "policy": inp.get("policy") or [], "policy_tags": inp.get("policy") or [],
             "init": {
+                **raw_init,
                 "starting_state": raw_init.get("starting_state") or "None",
                 "tool_output_mode": raw_init.get("tool_output_mode") or "Native",
                 "named_tool": raw_init.get("named_tool"),

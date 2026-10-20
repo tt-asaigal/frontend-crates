@@ -2068,6 +2068,11 @@ changes:
           expected: []
   retired__muse_1:
     absent: true
+  structured_response_after_reasoning:
+    observation:
+      error:
+        code: legacy_unclassified
+        detail: "structural tag: structural-tag verifier: Traceback (most recent call last):\n  File \"/home/keivenc/dev/frontend-crates/frontend-crates__434-gpt-oss__DIS-3151/conformance/utils/src/check_structural_tag.py\", line 61, in <module>\n    print(json.dumps(verify(json.load(sys.stdin))))\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/keivenc/dev/frontend-crates/frontend-crates__434-gpt-oss__DIS-3151/conformance/utils/src/check_structural_tag.py\", line 56, in verify\n    raise ValueError(f\"grammar accepted rejection probe {index}\")\nValueError: grammar accepted rejection probe 0\n"
   text_before_tool:
     observation:
       value:

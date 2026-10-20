@@ -397,10 +397,9 @@ def test_every_rendered_config_key_exists_in_the_emitted_init() -> None:
     assert keys, "CONFIG_KEYS not found in conformance_view.js"
 
     emitted = set()
-    for case in list(CLEAN) + list(EDGE):
-        init = next((f for f in case if isinstance(f, dict) and "tool_output_mode" in f), None)
-        if init:
-            emitted |= set(init)
+    for family in FAMILIES:
+        for case in build_cases(family).values():
+            emitted |= set(case["init"])
     missing = sorted(keys - emitted)
     assert not missing, (
         f"conformance_view.js renders {missing}, which no case emits in `init` — "
@@ -890,15 +889,15 @@ def test_unified_case_counts_match_the_generator():
     denominator survived in the prose before.
     """
     family_specific = {
-        "deepseek_v4": 130,
+        "deepseek_v4": 131,
         "deepseek_v41": 127,
         "gemma4": 124,
-        "glm47": 121,
-        "gpt_oss": 156,
+        "glm47": 122,
+        "gpt_oss": 157,
         "kimi_k2": 121,
         "kimi_k3": 128,
         "muse_glimmer": 128,
-        "qwen3": 124,
+        "qwen3": 125,
     }
     assert set(family_specific) == set(FAMILIES)
     per_family = {fam: len(build_cases(fam)) for fam in FAMILIES}
@@ -911,7 +910,7 @@ def test_deferred_case_ids_are_not_in_the_active_taxonomy():
     deferred = {"1-2", "5-5", "6-2", "32-6", "50-1", "50-2"} | {
         f"31-{number}" for number in range(31, 41)
     }
-    assert len(UNIFIED_TAX) == 211 + len(CONFORMANCE_CASES)
+    assert len(UNIFIED_TAX) == 212 + len(CONFORMANCE_CASES)
     assert not {f"UNIFIED.{case_id}" for case_id in deferred} & {
         numbered_id(scenario) for scenario in UNIFIED_TAX
     }
@@ -1654,6 +1653,38 @@ def _assert_cross_family_contract(corpus):
                 init["starting_state"] = "None"
             events = (_assert_malformed_recovery(family, case) if scenario == "malformed_json_then_two_valid_calls"
                       else _logical_events(scenario, family, case["golden"]))
+            if scenario == "structured_response_after_reasoning":
+                # Compare the schema and invalid payloads after checking each
+                # native envelope; Harmony generates headers, others prefill.
+                assert case["tools"] == []
+                assert init["starting_state"] == ("None" if family == "gpt_oss" else "Reasoning")
+                response = events[1]["text"]
+                if family == "qwen3":
+                    assert response.startswith("\n\n")
+                    response = response[2:]
+                schema = init["structural_tag"]["schema"]
+                assert matches_schema(json.loads(response), schema)
+                ending = "<|return|>" if family == "gpt_oss" else ""
+                assert case["input"].endswith(response + ending)
+                prefix = case["input"][:-len(response + ending)]
+                probes = init["structural_tag"]["rejected"]
+                assert len(probes) == (6 if family == "gpt_oss" else 5)
+                if family == "gpt_oss":
+                    assert probes[-1] == prefix.replace("final<|message|>", "final<|constrain|>json<|message|>") + "invalid JSON" + ending
+                payloads = []
+                for probe in probes[:5]:
+                    assert probe.startswith(prefix) and probe.endswith(ending)
+                    payload = probe[len(prefix):len(probe) - len(ending) if ending else None]
+                    try:
+                        value = json.loads(payload)
+                    except json.JSONDecodeError:
+                        pass
+                    else:
+                        assert not matches_schema(value, schema)
+                    payloads.append(payload)
+                init["starting_state"] = "None"
+                init["structural_tag"] = {"schema": schema, "rejected": payloads}
+                events = [events[0], {"kind": "text", "text": response}]
             if family == "gpt_oss" and scenario in G.GPT_OSS_LEGACY_NON_HARMONY_SCENARIOS:
                 assert events == [{"kind": "text", "text": "still thinking about it"}]
                 # Other grammars opened a tool block; this retained Harmony request did not.

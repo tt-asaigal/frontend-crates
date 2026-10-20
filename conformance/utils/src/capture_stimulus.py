@@ -126,6 +126,10 @@ def capture_peer_results(
         def unavailable(code: str, detail: str) -> dict:
             return unavailable_result(code, detail, capture=requested)
 
+        if requested["init"].get("structural_tag") is not None:
+            results[key] = unavailable("unsupported_request_mode", "Parser-only peer capture does not execute structural-tag generation constraints.")
+            continue
+
         reason = unsupported_reason(case) if unsupported_reason is not None else None
         if reason is not None:
             if key in results:

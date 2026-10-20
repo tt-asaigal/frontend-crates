@@ -128,6 +128,48 @@ process.stdout.write(JSON.stringify(tips.map(tip => context.window.audit.buildTo
     return json.loads(result.stdout)
 
 
+def test_structural_response_popup_displays_the_executed_generation_request():
+    case = table.gen_unified_golden.build_cases("gpt_oss")[
+        "UNIFIED.structured_response_after_reasoning.gpt_oss"
+    ]
+    request = case["init"]["structural_tag"]
+    request["rejected"].append("</code><script>invalid response</script>")
+    constrained, ordinary = _render_tooltips([
+        {"init": case["init"]},
+        {"init": {"starting_state": "None", "tool_output_mode": "Native", "named_tool": None}},
+    ])
+    rendered = re.search(r'<code class="ttip-pre">structural_tag=(.*?)</code>', constrained, re.S)
+    assert rendered and json.loads(unescape(rendered[1])) == request
+    assert "XGrammar checks the response schema" in constrained
+    assert "[object Object]" not in constrained
+    assert "<script>invalid response</script>" not in constrained
+    assert "structural_tag" not in ordinary
+
+
+def test_canonical_structural_response_metadata_reaches_the_model_and_popup(model_v2):
+    scenario = "structured_response_after_reasoning"
+    expected = table.gen_unified_golden.scenario_families(scenario)
+    checked = set()
+    for row in _tab(model_v2, "tab-unified")["rows"]:
+        family = row.get("family")
+        if not family:
+            continue
+        cell = leaf_cells(row)[scenario]
+        if family not in expected:
+            assert cell["status"] == "na"
+            continue
+        checked.add(family)
+        case = table.gen_unified_golden.build_cases(family)[f"UNIFIED.{scenario}.{family}"]
+        tip = cell["tooltip"]
+        assert tip["init"] == case["init"]
+        assert cell["case_id"] == "UNIFIED.36-structured_response_after_reasoning"
+        assert cell_state(cell, {"key": "dynamo", "label": "Dynamo"})[0] == "green"
+        rendered = _render_tooltips([tip])[0]
+        config = re.search(r'<code class="ttip-pre">structural_tag=(.*?)</code>', rendered, re.S)
+        assert config and json.loads(unescape(config[1])) == case["init"]["structural_tag"]
+    assert checked == expected
+
+
 def test_tooltip_uses_concise_copy_for_unavailable_results():
     tips = [
         {"candidates": [{"key": "vllm_rust", "label": "vLLM", "block": {
@@ -459,7 +501,9 @@ def test_unified_descriptive_case_ids_use_dash_everywhere(model_v2):
         assert columns[scenario] == short_id
         assert short_id in glossary_ids
         assert cells[scenario]["case_id"] == full_id
-        assert cells[scenario]["tooltip"]["head"].startswith(f"{full_id} (")
+        family = cells[scenario]["family"]
+        alias = f" ({scenario})" if family not in table.gen_unified_golden.scenario_families(scenario) else ""
+        assert cells[scenario]["tooltip"]["head"] == f"{full_id}{alias} — {family}"
 
 
 def test_unified_duplicate_notes_and_deepseek_prefilled_captures(model_v2):
@@ -1427,7 +1471,7 @@ def test_glm_type_references_have_typed_current_batch_and_unified_captures(
 def test_historical_unified_mismatch_does_not_claim_the_parser_is_missing(model_v2):
     tab = _tab(model_v2, "tab-unified")
     row = next(row for row in tab["rows"] if row.get("family") == "qwen3")
-    cell = row["cells"]["deepseek_v41_mixed_control_text_in_string"]
+    cell = leaf_cells(row)["deepseek_v41_mixed_control_text_in_string"]
     block = next(candidate["block"] for candidate in cell["tooltip"]["candidates"]
                  if candidate["key"] == "dynamo@0.7.4")
     assert block["verdict"] == "ARG_MISMATCH"
@@ -1457,7 +1501,7 @@ def test_gpt_oss_uncaptured_peer_batch_results_are_missing_not_unsupported(model
     keys = {"vllm_python_batch@" + version for version in ("0.23.0", "0.24.0", "0.25.1", "0.26.0")}
     keys.add("sglang_python_batch@0.5.14")
     cases = [cell for cell in leaf_cells(row).values() if cell["status"] != "na"]
-    assert len(cases) == 270
+    assert len(cases) == len(table.gen_unified_golden.build_cases("gpt_oss"))
     assert leaf_cells(row)["tool_only"]["case_id"] == "UNIFIED.1-tool_only"
     missing = []
     for cell in cases:

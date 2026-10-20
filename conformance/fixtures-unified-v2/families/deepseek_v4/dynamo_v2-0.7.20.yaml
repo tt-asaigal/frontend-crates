@@ -3348,6 +3348,11 @@ changes:
             complete: true
         - expected: []
         - expected: []
+  structured_response_after_reasoning:
+    observation:
+      unavailable:
+        code: producer_checkout_blocked
+        detail: Historical producer checkout was blocked by the local commit-signature policy. The parser was not executed, and no newer output was substituted.
 metadata_changes: {}
 document_overrides:
   guided_json_native_parameter_array_before_payload:
@@ -3369,6 +3374,12 @@ document_overrides:
       capture_origin: null
       inherited_from: null
   guided_json_noncall_before_native_array_before_payload:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.20
+      capture_origin: null
+      inherited_from: null
+  structured_response_after_reasoning:
     capture_provenance:
       captured_with:
         dynamo_v2: 0.7.20

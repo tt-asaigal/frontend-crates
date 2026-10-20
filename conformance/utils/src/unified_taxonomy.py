@@ -26,6 +26,7 @@ from null_cases import NULL_VARIANTS
 from schema_cases import ARGUMENT_SECTIONS, CONFORMANCE_CASES, SCHEMA_GROUPS, argument_section, schema_fold, schema_group
 
 UNIFIED_TAX = {
+    "structured_response_after_reasoning": (36, "1"),
     'harmony_guided_json_gt_in_argument_bare_opener': ("gpt_oss", "1"),
     'harmony_guided_json_gt_in_argument_named_bare_opener': ("gpt_oss", "2"),
     'harmony_guided_json_narrated_prefix_inside_reasoning': ("gpt_oss", "3"),

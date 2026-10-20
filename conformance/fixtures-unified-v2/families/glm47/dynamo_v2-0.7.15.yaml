@@ -201,6 +201,11 @@ changes:
     absent: true
   native_unmatched_quote_then_call:
     absent: true
+  structured_response_after_reasoning:
+    observation:
+      error:
+        code: legacy_unclassified
+        detail: "structural tag: structural-tag verifier: Traceback (most recent call last):\n  File \"/home/keivenc/dev/frontend-crates/frontend-crates__434-gpt-oss__DIS-3151/conformance/utils/src/check_structural_tag.py\", line 61, in <module>\n    print(json.dumps(verify(json.load(sys.stdin))))\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/keivenc/dev/frontend-crates/frontend-crates__434-gpt-oss__DIS-3151/conformance/utils/src/check_structural_tag.py\", line 56, in verify\n    raise ValueError(f\"grammar accepted rejection probe {index}\")\nValueError: grammar accepted rejection probe 0\n"
 metadata_changes:
   guided_json_native_parameter_array_before_payload:
     init:
@@ -222,4 +227,33 @@ metadata_changes:
       starting_state: Response
       tool_output_mode: GuidedJson
       named_tool: null
+  structured_response_after_reasoning:
+    init:
+      starting_state: Reasoning
+      tool_output_mode: Native
+      named_tool: null
+      structural_tag:
+        schema:
+          type: object
+          properties:
+            location:
+              type: string
+              enum:
+              - London
+              - New York
+            temperature:
+              type: number
+            conditions:
+              type: string
+          required:
+          - location
+          - temperature
+          - conditions
+          additionalProperties: false
+        rejected:
+        - Check London météo🙂 before answering; this is prose, not JSON.</think>[]
+        - 'Check London météo🙂 before answering; this is prose, not JSON.</think>{"location":'
+        - Check London météo🙂 before answering; this is prose, not JSON.</think>{"location":"Tokyo","temperature":12,"conditions":"cloudy"}
+        - Check London météo🙂 before answering; this is prose, not JSON.</think>{"location":"London"}
+        - Check London météo🙂 before answering; this is prose, not JSON.</think>{"location":"London","temperature":12,"conditions":"cloudy","analysis":"leaked"}
 document_overrides: {}

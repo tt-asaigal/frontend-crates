@@ -1919,6 +1919,11 @@ changes:
             name: get_weather
             arguments: '{"city": "Paris"}'
             complete: true
+  structured_response_after_reasoning:
+    observation:
+      error:
+        code: legacy_unclassified
+        detail: 'structural tag: no structural-tag builder for qwen3'
   text_before_tool:
     observation:
       value:

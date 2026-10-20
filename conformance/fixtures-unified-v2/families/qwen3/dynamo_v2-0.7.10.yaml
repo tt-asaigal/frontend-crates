@@ -451,6 +451,11 @@ changes:
     case_key: UNIFIED.11.d
   reason_unterminated:
     case_key: UNIFIED.10.d
+  structured_response_after_reasoning:
+    observation:
+      unavailable:
+        code: producer_source_unavailable
+        detail: Original parser 0.7.10 source could not be recovered with its recorded identity 39e6feb494844ddfbcdf21cfb4143696044b295e0f210c27eaab701f8f61bb5d. The parser was not executed, and no newer output was substituted.
   text_before_tool:
     case_key: UNIFIED.8.a
   text_between_calls:
@@ -488,6 +493,7 @@ changes:
 metadata_changes:
   guided_json_native_parameter_string_before_payload: {}
   guided_json_noncall_before_native_array_before_payload: {}
+  structured_response_after_reasoning: {}
 document_overrides:
   guided_json_native_parameter_string_before_payload:
     capture_provenance:
@@ -496,6 +502,12 @@ document_overrides:
       capture_origin: null
       inherited_from: null
   guided_json_noncall_before_native_array_before_payload:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.10
+      capture_origin: null
+      inherited_from: null
+  structured_response_after_reasoning:
     capture_provenance:
       captured_with:
         dynamo_v2: 0.7.10

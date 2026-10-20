@@ -2380,7 +2380,8 @@ def _init_is_request_scoped(init):
     """True when a case declares a request mode a pre-unified build cannot see."""
     init = init or {}
     return (init.get("tool_output_mode", "Native") != "Native"
-            or init.get("starting_state", "None") != "None")
+            or init.get("starting_state", "None") != "None"
+            or init.get("structural_tag") is not None)
 def _vllm_entry(spec, fam):
     """`_entry` for the vLLM column, annotating a family no released vLLM can parse.
 
@@ -2990,6 +2991,56 @@ for _edge in tuple(EDGE):
                                                *_edge_case_family_policy(_edge)["gpt_oss"][3:])})))
 
 
+def _structured_response_case():
+    schema = {
+        "type": "object",
+        "properties": {
+            "location": {"type": "string", "enum": ["London", "New York"]},
+            "temperature": {"type": "number"},
+            "conditions": {"type": "string"},
+        },
+        "required": ["location", "temperature", "conditions"],
+        "additionalProperties": False,
+    }
+    body = json.dumps({"location": "London", "temperature": 12, "conditions": "cloudy"}, separators=(",", ":"))
+    reason = "Check London météo🙂 before answering; this is prose, not JSON."
+    inputs, initializations = {}, {}
+    unsupported = D("UNSUPPORTED", "Parser-only peer capture does not execute structural-tag generation constraints.")
+    for family in ("gpt_oss", "qwen3", "glm47", "deepseek_v4"):
+        if family == "gpt_oss":
+            prefix = r_reason(family, reason).removeprefix("<|start|>assistant") + r_text(family, "").removesuffix("<|return|>")
+            suffix, state, visible_prefix = "<|return|>", "None", ""
+        else:
+            visible_prefix = "\n\n" if family == "qwen3" else ""
+            prefix = reason + "</think>" + visible_prefix
+            suffix, state = "", "Reasoning"
+        rejected = [prefix + invalid + suffix for invalid in (
+            "[]", '{"location":',
+            '{"location":"Tokyo","temperature":12,"conditions":"cloudy"}',
+            '{"location":"London"}',
+            '{"location":"London","temperature":12,"conditions":"cloudy","analysis":"leaked"}',
+        )]
+        if family == "gpt_oss":
+            rejected.append(prefix.replace("final<|message|>", "final<|constrain|>json<|message|>") + "invalid JSON" + suffix)
+        initializations[family] = {
+            "starting_state": state, "tool_output_mode": "Native", "named_tool": None,
+            "structural_tag": {"schema": schema, "rejected": rejected},
+        }
+        inputs[family] = (prefix + body + suffix, unsupported, M, [
+            {"kind": "reasoning", "text": reason},
+            {"kind": "text", "text": visible_prefix + body},
+        ])
+    return (
+        "structured_response_after_reasoning",
+        "No-tools response_format schema with free reasoning before the constrained JSON response. GPT-OSS emits its analysis and final headers; other supported builders close prompt-prefilled reasoning. The real structural tag must accept the authored Unicode stream and every split, reject wrong types, missing/extra keys and invalid values, then the native parser must preserve reasoning and response separately. Dynamo issue #16787.",
+        ["P5", "I5"], [], OnlyFamilies(initializations), {"finish_reason": "stop"},
+        OnlyFamilies(inputs), [],
+    )
+
+
+EDGE.append(_structured_response_case())
+
+
 def build_cases(fam):
     """Every CLEAN + EDGE scenario for one family, keyed by case id."""
     cases = {}
@@ -3117,6 +3168,11 @@ def _build_edge_cases(fam, specs):
             name, desc, policy, golden, init, stream_config, per_fam, case_tools = edge_case
         else:
             name, desc, policy, golden, init, stream_config, per_fam = edge_case
+
+        if isinstance(per_fam, OnlyFamilies) and fam not in per_fam:
+            continue
+        if isinstance(init, OnlyFamilies):
+            init = init[fam]
 
         # A family that rejects the mode cannot produce a cell for it. The harness
         # applies `init` before parsing and panics on the rejection, so the case is

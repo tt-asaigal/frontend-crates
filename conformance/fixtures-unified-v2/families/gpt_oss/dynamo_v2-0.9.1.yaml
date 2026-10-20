@@ -497,6 +497,11 @@ changes:
             arguments: '{"city": "Paris"}'
             complete: true
         - expected: []
+  structured_response_after_reasoning:
+    observation:
+      error:
+        code: legacy_unclassified
+        detail: "structural tag: structural-tag verifier: Traceback (most recent call last):\n  File \"/home/keivenc/dev/frontend-crates/frontend-crates__434-gpt-oss__DIS-3151/conformance/utils/src/check_structural_tag.py\", line 61, in <module>\n    print(json.dumps(verify(json.load(sys.stdin))))\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/keivenc/dev/frontend-crates/frontend-crates__434-gpt-oss__DIS-3151/conformance/utils/src/check_structural_tag.py\", line 56, in verify\n    raise ValueError(f\"grammar accepted rejection probe {index}\")\nValueError: grammar accepted rejection probe 0\n"
 metadata_changes:
   guided_json_narrated_prefix_inside_reasoning:
     init:
@@ -518,6 +523,36 @@ metadata_changes:
       starting_state: None
       tool_output_mode: GuidedJson
       named_tool: null
+  structured_response_after_reasoning:
+    init:
+      starting_state: None
+      tool_output_mode: Native
+      named_tool: null
+      structural_tag:
+        schema:
+          type: object
+          properties:
+            location:
+              type: string
+              enum:
+              - London
+              - New York
+            temperature:
+              type: number
+            conditions:
+              type: string
+          required:
+          - location
+          - temperature
+          - conditions
+          additionalProperties: false
+        rejected:
+        - <|channel|>analysis<|message|>Check London météo🙂 before answering; this is prose, not JSON.<|end|><|start|>assistant<|channel|>final<|message|>[]<|return|>
+        - <|channel|>analysis<|message|>Check London météo🙂 before answering; this is prose, not JSON.<|end|><|start|>assistant<|channel|>final<|message|>{"location":<|return|>
+        - <|channel|>analysis<|message|>Check London météo🙂 before answering; this is prose, not JSON.<|end|><|start|>assistant<|channel|>final<|message|>{"location":"Tokyo","temperature":12,"conditions":"cloudy"}<|return|>
+        - <|channel|>analysis<|message|>Check London météo🙂 before answering; this is prose, not JSON.<|end|><|start|>assistant<|channel|>final<|message|>{"location":"London"}<|return|>
+        - <|channel|>analysis<|message|>Check London météo🙂 before answering; this is prose, not JSON.<|end|><|start|>assistant<|channel|>final<|message|>{"location":"London","temperature":12,"conditions":"cloudy","analysis":"leaked"}<|return|>
+        - <|channel|>analysis<|message|>Check London météo🙂 before answering; this is prose, not JSON.<|end|><|start|>assistant<|channel|>final<|constrain|>json<|message|>invalid JSON<|return|>
 document_overrides:
   content_then_reason:
     capture_provenance:
@@ -582,6 +617,15 @@ document_overrides:
         git_commit: 5c4c2089df85550e79428e5f682b3974ea595e10
         source_sha256: af88f893ef94d1b52a2c99a9b6d8f26dab02e02f445aca51318aa9de53cface8
       inherited_from: 0.9.0
+  structured_response_after_reasoning:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.9.1
+      capture_origin:
+        crate_version: 0.9.1
+        source_sha256: 27d1c6e1232ae8738112204d6689e69a10daff7d555c17f1c641ae3efa451e61
+        git_commit: 012c5344a0739928896529ea182d152f91df2714
+      inherited_from: null
   text_only:
     capture_provenance:
       captured_with:

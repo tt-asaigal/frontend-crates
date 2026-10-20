@@ -4650,6 +4650,15 @@ changes:
             arguments: '{"value": {"x": 1}}'
             complete: true
         - expected: []
+  structured_response_after_reasoning:
+    case_key: UNIFIED.36-structured_response_after_reasoning
+    stimulus:
+      ref: current
+      semantic_sha256: 3d352e75afc03e25aba4d13708959faab9b2e432cc9b16bcfbe28da74a5edc94
+    observation:
+      unavailable:
+        code: producer_source_unavailable
+        detail: Original parser 0.7.24 source could not be recovered with its recorded identity add2c59dea7800eba96993fbc7f0add387e03964ee319396540ba6eabe139791. The parser was not executed, and no newer output was substituted.
   text_before_tool:
     case_key: UNIFIED.8-text_before_tool
     stimulus:
@@ -5146,6 +5155,12 @@ document_overrides:
       capture_origin: null
       inherited_from: null
   native_unmatched_quote_then_call:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.24
+      capture_origin: null
+      inherited_from: null
+  structured_response_after_reasoning:
     capture_provenance:
       captured_with:
         dynamo_v2: 0.7.24

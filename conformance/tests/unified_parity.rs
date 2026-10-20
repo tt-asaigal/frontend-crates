@@ -71,6 +71,36 @@ fn load_native_golden() -> Vec<GoldenFile> {
     files
 }
 
+#[test]
+fn structural_response_case_checks_the_schema_before_parsing() {
+    let mut families = Vec::new();
+    for file in load_native_golden() {
+        for (id, mut case) in file.cases {
+            if !id.contains("structured_response_after_reasoning") {
+                continue;
+            }
+            families.push(file.family.clone());
+            let tools = common::unified_tools_for_schemas(case.tools.as_ref());
+            let chunks = capture::input_chunks(&case.input, case.input_chunks.as_deref());
+            assert_eq!(
+                events(&file.family, &chunks, &case.init, &tools).unwrap(),
+                case.golden,
+                "{id}"
+            );
+            // Parsing the same stream still succeeds with a contradictory schema.
+            // Only a real grammar check can reject this request before parsing.
+            case.init.structural_tag.as_mut().unwrap().schema =
+                serde_json::json!({"const": "impossible response"});
+            assert!(
+                events(&file.family, &chunks, &case.init, &tools).is_err(),
+                "{id}: ignored the response schema"
+            );
+        }
+    }
+    families.sort();
+    assert_eq!(families, ["deepseek_v4", "glm47", "gpt_oss", "qwen3"]);
+}
+
 fn has_unified_parser(family: &str) -> bool {
     create_unified_parser_for_family(family, &[]).is_ok()
 }
@@ -84,6 +114,8 @@ fn events(
     let mut parser = create_unified_parser_for_family(family, tool_schemas)
         .unwrap_or_else(|e| panic!("create unified parser for `{family}`: {e}"));
     init.apply(&mut parser, family);
+    init.validate_capture(family, tool_schemas, chunks)
+        .map_err(|error| format!("{error:#}"))?;
 
     let rows = capture::native_capture(&mut parser, chunks).map_err(|failure| match failure {
         capture::CaptureFailure::Error(error) => error,

@@ -2332,6 +2332,15 @@ document_overrides:
         source_sha256: 1a57cb77b9bd83259d15a81aa1e936d48b3f67072760e58940384f018c040e28
         git_commit: 460586046cd45f271b9fa8a904ab9af91220d2e9
       inherited_from: null
+  structured_response_after_reasoning:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.26
+      capture_origin:
+        crate_version: 0.7.26
+        git_commit: 460586046cd45f271b9fa8a904ab9af91220d2e9
+        source_sha256: 1a57cb77b9bd83259d15a81aa1e936d48b3f67072760e58940384f018c040e28
+      inherited_from: null
   text_before_tool:
     capture_provenance:
       captured_with:

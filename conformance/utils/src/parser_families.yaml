@@ -379,6 +379,7 @@ unified_display:
     33: Guided Decoding — invalid payload plus tool markup
     34: Guided Decoding — reasoning boundaries
     35: Guided Decoding — markers in visible answers
+    36: Guided Decoding — response schemas after reasoning
     40: Prefilled Reasoning
     41: Prefilled Reasoning — malformed
     50: Prefilled Response

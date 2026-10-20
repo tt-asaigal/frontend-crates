@@ -500,8 +500,8 @@
   // case did not set still shows, as `<not specified>` plus the default that applied,
   // so "not set" and "set to the default" stay distinguishable when reading a popup.
   //
-  // ONLY real request-scoped parser inputs belong here, i.e. the arguments of
-  // `UnifiedParser::initialize_with_output_mode`. `finish_reason` is deliberately
+  // Request initialization includes parser modes and generation constraints.
+  // `finish_reason` is deliberately
   // NOT one: `finish()` takes no argument, so the parser cannot see it (the same is
   // true of vLLM's parsers) — it is a stream property, not a knob. Listing it here
   // would claim the parser behaves differently per value, which it does not.
@@ -535,6 +535,12 @@
           ? 'required choice: payload is one call object, or an array of them'
           : 'named choice: payload is this tool\'s arguments alone';
       }
+    },
+    {
+      key: 'structural_tag', optional: true,
+      gloss: function () {
+        return 'XGrammar checks the response schema and rejected streams before native parsing';
+      }
     }
   ];
 
@@ -543,9 +549,12 @@
     var items = CONFIG_KEYS.map(function (spec) {
       var v = init[spec.key];
       var unset = (v === undefined || v === '');
+      if (spec.optional && (unset || v === null)) { return ''; }
+      const objectValue = v !== null && typeof v === 'object';
       // Distinguish "the case did not set this" from "the case set it to the
       // variant that happens to be named None".
-      var shown = unset ? '<unset>' : (v === null ? 'null' : String(v));
+      var shown = unset ? '<unset>' : (v === null ? 'null'
+        : (objectValue ? JSON.stringify(v, null, 2) : String(v)));
       var why = spec.gloss
         ? spec.gloss(unset ? null : v, init)
         : (CONFIG_GLOSS[spec.key] || {})[shown];
@@ -559,7 +568,8 @@
       var vals = (spec.values || [])
         .map(function (x) { return '<code>' + escapeHtml(x) + '</code>'; })
         .join(', ');
-      return '<li><code>' + escapeHtml(spec.key + '=' + shown) + '</code>'
+      return '<li><code' + (objectValue ? ' class="ttip-pre"' : '') + '>'
+        + escapeHtml(spec.key + '=' + shown) + '</code>'
         + (why ? '<span class="ttip-config-why"> — ' + escapeHtml(why) + '</span>' : '')
         + (vals ? '<span class="ttip-config-vals"> (possible: ' + vals + ')</span>' : '')
         + '</li>';

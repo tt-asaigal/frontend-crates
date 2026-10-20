@@ -4153,6 +4153,11 @@ changes:
         - delta_text: '<|start|>assistant<|channel|>commentary to=functions.schema_probe <|constrain|>json<|message|>{"value": {"x": 1}}<|call|>'
         - delta_text: ‹finish›
       semantic_sha256: 74e8958299cc6e6be578b8242d84ba90ee59ef56b9c077deeb9b20af5d75d0c9
+  structured_response_after_reasoning:
+    observation:
+      error:
+        code: legacy_unclassified
+        detail: 'structural tag: no structural-tag builder for gpt_oss'
   text_before_tool:
     stimulus:
       inline:
@@ -5492,6 +5497,36 @@ metadata_changes:
       starting_state: None
       tool_output_mode: Native
       named_tool: null
+  structured_response_after_reasoning:
+    init:
+      starting_state: None
+      tool_output_mode: Native
+      named_tool: null
+      structural_tag:
+        schema:
+          type: object
+          properties:
+            location:
+              type: string
+              enum:
+              - London
+              - New York
+            temperature:
+              type: number
+            conditions:
+              type: string
+          required:
+          - location
+          - temperature
+          - conditions
+          additionalProperties: false
+        rejected:
+        - <|channel|>analysis<|message|>Check London météo🙂 before answering; this is prose, not JSON.<|end|><|start|>assistant<|channel|>final<|message|>[]<|return|>
+        - <|channel|>analysis<|message|>Check London météo🙂 before answering; this is prose, not JSON.<|end|><|start|>assistant<|channel|>final<|message|>{"location":<|return|>
+        - <|channel|>analysis<|message|>Check London météo🙂 before answering; this is prose, not JSON.<|end|><|start|>assistant<|channel|>final<|message|>{"location":"Tokyo","temperature":12,"conditions":"cloudy"}<|return|>
+        - <|channel|>analysis<|message|>Check London météo🙂 before answering; this is prose, not JSON.<|end|><|start|>assistant<|channel|>final<|message|>{"location":"London"}<|return|>
+        - <|channel|>analysis<|message|>Check London météo🙂 before answering; this is prose, not JSON.<|end|><|start|>assistant<|channel|>final<|message|>{"location":"London","temperature":12,"conditions":"cloudy","analysis":"leaked"}<|return|>
+        - <|channel|>analysis<|message|>Check London météo🙂 before answering; this is prose, not JSON.<|end|><|start|>assistant<|channel|>final<|constrain|>json<|message|>invalid JSON<|return|>
   text_before_tool:
     init:
       starting_state: None
@@ -6601,6 +6636,15 @@ document_overrides:
       captured_with:
         dynamo_v2: 0.7.25+source.4b8e5f76682c717b7992c60d25ac6f0d58233dd5595acf338e1f303c35743180
       capture_origin: null
+      inherited_from: null
+  structured_response_after_reasoning:
+    capture_provenance:
+      captured_with:
+        dynamo_v2: 0.7.25
+      capture_origin:
+        crate_version: 0.7.25
+        source_sha256: 4b8e5f76682c717b7992c60d25ac6f0d58233dd5595acf338e1f303c35743180
+        git_commit: 460586046cd45f271b9fa8a904ab9af91220d2e9
       inherited_from: null
   text_before_tool:
     capture_provenance:

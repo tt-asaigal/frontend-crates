@@ -1,0 +1,29 @@
+provenance:
+  status: captured
+  origin:
+    crate_version: 0.9.4
+    git_commit: 64fdc6b01bec696a85f89b5694622e195de998e1
+    source_sha256: 07221e197e28dbb564caf8f36a340d635d57f3f2f271326bc8fc6c4d097b2101
+document:
+  mode: unified
+changes:
+  structured_response_after_reasoning:
+    observation:
+      value:
+        assembled:
+        - kind: reasoning
+          text: Check London météo🙂 before answering; this is prose, not JSON.
+        - kind: text
+          text: '{"location":"London","temperature":12,"conditions":"cloudy"}'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: Check London météo🙂 before answering; this is prose, not JSON.
+        - expected: []
+        - expected:
+          - kind: text
+            text: '{"location":"London","temperature":12,"conditions":"cloudy"}'
+        - expected: []
+metadata_changes:
+  structured_response_after_reasoning: {}
+document_overrides: {}

@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+import json
 import shutil
 import re
 from pathlib import Path
@@ -65,6 +66,33 @@ def load(driver, rendered_page: Path, query=""):
     driver.get(rendered_page.resolve().as_uri() + query)
     WebDriverWait(driver, 20).until(lambda browser: browser.find_elements(By.CSS_SELECTOR, ".tab-panel.active .capture-slots"))
     WebDriverWait(driver, 20).until(lambda browser: browser.find_elements(By.CSS_SELECTOR, ".tab-panel.active table[data-parity-table]"))
+
+
+def test_structural_response_popup_shows_generation_constraints(matrix_driver, rendered_page):
+    driver = matrix_driver
+    load(driver, rendered_page)
+    try:
+        host = driver.execute_script("""
+            return [...document.querySelectorAll('#tab-unified td.cell[data-family="gpt_oss"]')]
+                .find(cell => (window.__conformanceCellModel(cell) || {}).case_id ===
+                    'UNIFIED.36-structured_response_after_reasoning');
+        """)
+        assert host is not None
+        driver.execute_script("arguments[0].scrollIntoView({block:'center',inline:'center'})", host)
+        host.send_keys(Keys.ENTER)
+        popup = WebDriverWait(driver, 10).until(
+            lambda browser: browser.find_element(By.CSS_SELECTOR, "body > .ttip-pinned"))
+        config = next(node for node in popup.find_elements(By.CSS_SELECTOR, ".ttip-config code")
+                      if node.get_attribute("textContent").startswith("structural_tag="))
+        request = json.loads(config.get_attribute("textContent").removeprefix("structural_tag="))
+        assert request["schema"]["additionalProperties"] is False
+        assert request["schema"]["required"] == ["location", "temperature", "conditions"]
+        assert len(request["rejected"]) == 6
+        assert "[object Object]" not in config.text
+        assert driver.execute_script("return getComputedStyle(arguments[0]).whiteSpace", config) == "pre-wrap"
+        popup.find_element(By.CSS_SELECTOR, ".ttip-close").click()
+    finally:
+        load(driver, rendered_page)
 
 
 def selection(driver):

@@ -14485,3 +14485,55 @@ cases:
         name: get_weather
         arguments:
           city: Paris
+  structured_response_after_reasoning:
+    lifecycle: active
+    scenario: structured_response_after_reasoning
+    description: 'No-tools response_format schema with free reasoning before the constrained JSON response. GPT-OSS emits its analysis and final headers; other supported builders close prompt-prefilled reasoning. The real structural tag must accept the authored Unicode stream and every split, reject wrong types, missing/extra keys and invalid values, then the native parser must preserve reasoning and response separately. Dynamo issue #16787.'
+    policy:
+    - P5
+    - I5
+    display_id: UNIFIED.36-structured_response_after_reasoning
+    historical_ids: []
+    request:
+      input: Check London météo🙂 before answering; this is prose, not JSON.</think>{"location":"London","temperature":12,"conditions":"cloudy"}
+      init:
+        starting_state: Reasoning
+        tool_output_mode: Native
+        named_tool: null
+        structural_tag:
+          schema:
+            type: object
+            properties:
+              location:
+                type: string
+                enum:
+                - London
+                - New York
+              temperature:
+                type: number
+              conditions:
+                type: string
+            required:
+            - location
+            - temperature
+            - conditions
+            additionalProperties: false
+          rejected:
+          - Check London météo🙂 before answering; this is prose, not JSON.</think>[]
+          - 'Check London météo🙂 before answering; this is prose, not JSON.</think>{"location":'
+          - Check London météo🙂 before answering; this is prose, not JSON.</think>{"location":"Tokyo","temperature":12,"conditions":"cloudy"}
+          - Check London météo🙂 before answering; this is prose, not JSON.</think>{"location":"London"}
+          - Check London météo🙂 before answering; this is prose, not JSON.</think>{"location":"London","temperature":12,"conditions":"cloudy","analysis":"leaked"}
+      finish_reason: stop
+      tools: []
+      chunks:
+      - delta_text: Check London météo🙂 before answering; this is prose, not JSON.
+      - delta_text: </think>
+      - delta_text: '{"location":"London","temperature":12,"conditions":"cloudy"}'
+      - delta_text: ‹finish›
+    golden:
+      assembled:
+      - kind: reasoning
+        text: Check London météo🙂 before answering; this is prose, not JSON.
+      - kind: text
+        text: '{"location":"London","temperature":12,"conditions":"cloudy"}'
