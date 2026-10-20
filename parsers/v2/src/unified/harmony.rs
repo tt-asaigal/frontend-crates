@@ -229,7 +229,15 @@ impl HarmonyRuntime {
                     .chars()
                     .all(|ch| ch.is_alphanumeric() || matches!(ch, '_' | '.' | '-'))
             {
-                return Route::Tool(name.to_string());
+                // The legacy tool API only recognizes commentary calls. The
+                // native Unified parser accepts recipient routing on any channel.
+                return if self.legacy_tool_compatibility
+                    && self.parser.current_channel().as_deref() != Some("commentary")
+                {
+                    Route::Suppress
+                } else {
+                    Route::Tool(name.to_string())
+                };
             }
             // openai-harmony 0.0.8 reports a lone content-type field as a
             // recipient. It must not suppress a response_format final message.
@@ -237,10 +245,10 @@ impl HarmonyRuntime {
                 return Route::Suppress;
             }
         }
-        if self.parser.current_channel().as_deref() == Some("analysis") {
-            Route::Reasoning
-        } else {
-            Route::Text
+        match self.parser.current_channel().as_deref() {
+            Some("analysis") => Route::Reasoning,
+            Some("commentary") if self.legacy_tool_compatibility => Route::Suppress,
+            _ => Route::Text,
         }
     }
 
@@ -347,26 +355,47 @@ impl HarmonyRuntime {
         Ok(output)
     }
 
+    fn flush_outside_pending(&mut self, output: &mut UnifiedParserOutput) {
+        if !self.outside_pending.is_empty() {
+            match self.encoding.tokenizer().decode_utf8(&self.outside_pending) {
+                Ok(text) => output.push_text(text),
+                Err(_) => tracing::warn!(
+                    why = "incomplete_harmony_utf8",
+                    skipped_tokens = self.outside_pending.len(),
+                    "discarded an incomplete UTF-8 fragment"
+                ),
+            }
+            self.outside_pending.clear();
+        }
+    }
+
     fn process_token(&mut self, id: u32, output: &mut UnifiedParserOutput) -> Result<()> {
         if !self.inside_message {
+            let marker = self.marker_ids.get(&id).copied();
+            let has_recipient = self.allow_implicit_channel_header
+                && matches!(marker, Some(CHANNEL | MESSAGE | FORMAT))
+                && self
+                    .encoding
+                    .tokenizer()
+                    .decode_utf8(&self.outside_pending)
+                    .is_ok_and(|text| {
+                        implicit_recipient_prefix(&text)
+                            && text
+                                .trim()
+                                .strip_prefix("to=")
+                                .is_some_and(|recipient| !recipient.is_empty())
+                    });
+            // Only a complete recipient belongs to an implicit header. Preserve
+            // whitespace and incomplete prefixes before a channel boundary.
+            if id == self.start_id || (marker == Some(CHANNEL) && !has_recipient) {
+                self.flush_outside_pending(output);
+            }
             if id == self.start_id {
-                if !self.outside_pending.is_empty() {
-                    match self.encoding.tokenizer().decode_utf8(&self.outside_pending) {
-                        Ok(text) => output.push_text(text),
-                        Err(_) => tracing::warn!(
-                            why = "incomplete_harmony_utf8",
-                            skipped_tokens = self.outside_pending.len(),
-                            "discarded an incomplete UTF-8 fragment before a new message"
-                        ),
-                    }
-                    self.outside_pending.clear();
-                }
                 self.inside_message = true;
                 self.process_parser_token(id, output)?;
             } else if self.allow_implicit_channel_header
-                && (self.marker_ids.get(&id).copied() == Some(CHANNEL)
-                    || (!self.outside_pending.is_empty()
-                        && matches!(self.marker_ids.get(&id).copied(), Some(MESSAGE | FORMAT))))
+                && (marker == Some(CHANNEL)
+                    || (has_recipient && matches!(marker, Some(MESSAGE | FORMAT))))
             {
                 let pending = std::mem::take(&mut self.outside_pending);
                 let prefix = self
@@ -380,13 +409,15 @@ impl HarmonyRuntime {
                     self.process_token(pending_id, output)?;
                 }
                 self.process_token(id, output)?;
-            } else if let Some(marker) = self.marker_ids.get(&id) {
+            } else if self.marker_ids.contains_key(&id) {
+                // An orphan control ends the pending prefix: bytes on its two
+                // sides must never combine into a synthetic recipient header.
+                self.flush_outside_pending(output);
                 tracing::warn!(
                     why = "orphan_harmony_control",
                     skipped_tokens = 1,
                     "discarded an orphan Harmony control token"
                 );
-                let _ = marker;
             } else {
                 self.outside_pending.push(id);
                 if let Ok(text) = self.encoding.tokenizer().decode_utf8(&self.outside_pending) {
@@ -684,17 +715,7 @@ impl HarmonyRuntime {
         while self.quoted_control_tail.is_some() {
             self.recover_quoted_control(output)?;
         }
-        if !self.outside_pending.is_empty() {
-            match self.encoding.tokenizer().decode_utf8(&self.outside_pending) {
-                Ok(text) => output.push_text(text),
-                Err(_) => tracing::warn!(
-                    why = "incomplete_harmony_utf8",
-                    skipped_tokens = self.outside_pending.len(),
-                    "discarded an incomplete UTF-8 fragment"
-                ),
-            }
-            self.outside_pending.clear();
-        }
+        self.flush_outside_pending(output);
         if self.in_body && matches!(self.route, Some(Route::Tool(_))) {
             tracing::warn!(
                 why = "truncated_harmony_tool_call",
@@ -2224,7 +2245,14 @@ mod tests {
     }
 
     fn assert_native_splits(input: &str, expected: &[UnifiedEvent]) {
-        let mut parser = gpt_oss_unified(&[]);
+        assert_parser_splits(gpt_oss_unified(&[]), input, expected);
+    }
+
+    fn assert_parser_splits(
+        mut parser: Box<dyn crate::unified::UnifiedParser>,
+        input: &str,
+        expected: &[UnifiedEvent],
+    ) {
         for split in input.char_indices().map(|(at, _)| at).chain([input.len()]) {
             parser.reset();
             parser.initialize(&[]).unwrap();
@@ -2249,6 +2277,144 @@ mod tests {
                 expected,
                 "token split={split}"
             );
+        }
+    }
+
+    #[test]
+    fn implicit_channel_headers_preserve_visible_separator_bytes() {
+        for whitespace in [" ", "\t", "\r\n", " \n\t", "\u{2003}"] {
+            for (header, body, end, event) in [
+                (
+                    "analysis",
+                    "think",
+                    MESSAGE_END,
+                    UnifiedEvent::Reasoning {
+                        text: "think".into(),
+                    },
+                ),
+                (
+                    "commentary to=functions.lookup",
+                    r#"{"q":"x"}"#,
+                    HANDOFF,
+                    UnifiedEvent::ToolCall {
+                        name: "lookup".into(),
+                        arguments: serde_json::json!({"q":"x"}),
+                    },
+                ),
+            ] {
+                let input = format!("before{whitespace}{CHANNEL}{header}{MESSAGE}{body}{end}after");
+                let expected = [
+                    UnifiedEvent::Text {
+                        text: format!("before{whitespace}"),
+                    },
+                    event,
+                    UnifiedEvent::Text {
+                        text: "after".into(),
+                    },
+                ];
+                assert_native_splits(&input, &expected);
+                assert_parser_splits(gpt_oss_legacy_tool_adapter(), &input, &expected);
+            }
+        }
+    }
+
+    #[test]
+    fn orphan_controls_preserve_pending_text_and_break_recipient_prefixes() {
+        for prefix in [" ", "\t", "\r\n", "t", "to", "to=", "to= "] {
+            let channel_input = format!("{prefix}{CHANNEL}analysis{MESSAGE}think{MESSAGE_END}");
+            assert_native_splits(
+                &channel_input,
+                &[
+                    UnifiedEvent::Text {
+                        text: prefix.into(),
+                    },
+                    UnifiedEvent::Reasoning {
+                        text: "think".into(),
+                    },
+                ],
+            );
+            for marker in [MESSAGE, FORMAT, HANDOFF, MESSAGE_END, TURN_END] {
+                let input = format!("{prefix}{marker}answer");
+                assert_native_splits(
+                    &input,
+                    &[UnifiedEvent::Text {
+                        text: format!("{prefix}answer"),
+                    }],
+                );
+            }
+        }
+        let input = format!("to={HANDOFF}functions.lookup{MESSAGE}answer");
+        assert_native_splits(
+            &input,
+            &[UnifiedEvent::Text {
+                text: "to=functions.lookupanswer".into(),
+            }],
+        );
+    }
+
+    #[test]
+    fn legacy_and_native_recipient_channel_routing() {
+        for channel in [None, Some("commentary"), Some("analysis"), Some("final")] {
+            for recipient in [
+                None,
+                Some("functions.lookup"),
+                Some("browser"),
+                Some("functions."),
+            ] {
+                for format in ["", " <|constrain|>json"] {
+                    for legacy in [false, true] {
+                        let recipient_header =
+                            recipient.map(|r| format!(" to={r}")).unwrap_or_default();
+                        let channel_header =
+                            channel.map(|c| format!("{CHANNEL}{c}")).unwrap_or_default();
+                        let input = format!(
+                            "{START}assistant{recipient_header}{channel_header}{format}{MESSAGE}{{\"q\":\"x\"}}{HANDOFF}"
+                        );
+                        let expected = match recipient {
+                            Some("functions.lookup")
+                                if !legacy || channel == Some("commentary") =>
+                            {
+                                vec![UnifiedEvent::ToolCall {
+                                    name: "lookup".into(),
+                                    arguments: serde_json::json!({"q": "x"}),
+                                }]
+                            }
+                            Some(_) => vec![],
+                            None if channel == Some("analysis") => vec![UnifiedEvent::Reasoning {
+                                text: r#"{"q":"x"}"#.into(),
+                            }],
+                            None if legacy && channel == Some("commentary") => vec![],
+                            None => vec![UnifiedEvent::Text {
+                                text: r#"{"q":"x"}"#.into(),
+                            }],
+                        };
+                        let parser = if legacy {
+                            gpt_oss_legacy_tool_adapter()
+                        } else {
+                            gpt_oss_unified(&[])
+                        };
+                        assert_parser_splits(parser, &input, &expected);
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn legacy_commentary_without_recipient_stays_suppressed() {
+        for content_type in [String::new(), format!(" {FORMAT}json")] {
+            for end in [HANDOFF, MESSAGE_END, TURN_END] {
+                let input = format!(
+                    "{START}assistant{CHANNEL}commentary{content_type}{MESSAGE}{{\"location\":\"NYC\"}}{end}{START}assistant{CHANNEL}final{MESSAGE}answer{TURN_END}"
+                );
+                assert_parser_splits(
+                    gpt_oss_legacy_tool_adapter(),
+                    &input,
+                    &[UnifiedEvent::Text {
+                        text: "answer".into(),
+                    }],
+                );
+            }
         }
     }
 

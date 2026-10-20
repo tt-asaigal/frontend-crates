@@ -207,6 +207,24 @@ mod tests {
     use super::*;
 
     #[test]
+    fn legacy_adapter_keeps_missing_recipient_body_out_of_visible_text() {
+        let input = concat!(
+            "<|start|>assistant<|channel|>commentary <|constrain|>json<|message|>",
+            r#"{"location":"NYC"}<|call|>"#
+        );
+        let mut parser = HarmonyToolStreamParser::new().unwrap();
+        assert!(parser.push(input).unwrap().calls.is_empty());
+        let result = parser.finish().unwrap();
+        assert!(result.calls.is_empty());
+        assert!(result.normal_text.is_empty());
+        assert!(parser.reset().is_empty());
+        let _ = parser
+            .push("<|start|>assistant<|channel|>final<|message|>answer<|return|>")
+            .unwrap();
+        assert_eq!(parser.finish().unwrap().normal_text, "answer");
+    }
+
+    #[test]
     fn legacy_parser_reset_allows_reuse() {
         let input = concat!(
             "<|start|>assistant to=functions.lookup<|channel|>commentary<|message|>",
