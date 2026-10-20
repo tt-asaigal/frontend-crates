@@ -238,15 +238,25 @@ impl JsonValueBoundary {
 /// copy of that marker embedded in a string argument cannot be mistaken for
 /// the real one (`WrappedBlockSpec::invoke_scan`).
 pub(crate) fn json_value_end(text: &str) -> Option<usize> {
-    if !matches!(text.chars().find(|c| !c.is_whitespace()), Some('{' | '[')) {
+    json_container_end(text.char_indices())
+}
+
+fn json_container_end(mut chars: impl Iterator<Item = (usize, char)>) -> Option<usize> {
+    let (_, first) = chars.find(|(_, ch)| !ch.is_whitespace())?;
+    if !matches!(first, '{' | '[') {
         return None;
     }
     let mut boundary = JsonValueBoundary::default();
-    text.char_indices().find_map(|(at, character)| {
-        boundary
-            .advance(character)
-            .then_some(at + character.len_utf8())
-    })
+    boundary.advance(first);
+    for (at, character) in chars {
+        if boundary.advance(character) {
+            return Some(at + character.len_utf8());
+        }
+        if boundary.invalid {
+            return None;
+        }
+    }
+    None
 }
 
 /// Re-serialize a v1core arguments JSON object in the model-emitted source
@@ -2378,6 +2388,21 @@ mod tests {
                     .chars()
                     .all(|ch| !boundary.advance(ch))
             );
+        }
+    }
+
+    #[test]
+    fn mismatched_json_boundary_never_scans_a_growing_suffix() {
+        for suffix in [0, 100, 8192] {
+            for prefix in ["{]", "[}"] {
+                let input = format!("{prefix}{}", "é{}[]".repeat(suffix));
+                let seen = std::cell::Cell::new(0usize);
+                let result = super::json_container_end(
+                    input.char_indices().inspect(|_| seen.set(seen.get() + 1)),
+                );
+                assert_eq!(result, None);
+                assert_eq!(seen.get(), 2, "suffix={suffix}");
+            }
         }
     }
 }

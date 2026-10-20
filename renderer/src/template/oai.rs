@@ -661,6 +661,8 @@ impl HfTokenizerConfigJsonFormatter {
                 .split_once('_')
                 .ok_or_else(|| anyhow::anyhow!("damaged Harmony literal placeholder"))?;
             let index: usize = index.parse()?;
+            // TODO: Preserve the template's escaping/filter transformations when
+            // restoring marker-shaped input containing quotes or newlines.
             segments.push(crate::RenderedSegment::new(
                 literals
                     .get(index)
