@@ -5,6 +5,7 @@
 import copy
 import hashlib
 import json
+import shutil
 import sys
 from pathlib import Path
 
@@ -13,10 +14,9 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 import unified_history
-from capture_stimulus import select_peer_observation
-import generate_conformance_table as table
-import markers
-from tables.reasoning import table as reasoning_table
+import unified_archives
+from capture_stimulus import normalize_unavailable, select_peer_observation
+from viewer_codec import encode_typed
 
 
 def _request(text: str = "hello") -> dict:
@@ -33,7 +33,99 @@ def _request(text: str = "hello") -> dict:
     }
 
 
-def test_structured_parser_error_survives_store_and_view_projection(tmp_path):
+@pytest.mark.parametrize("operation", ["update_store_from_loose", "update_from_loose", "sync_current_corpus"])
+def test_no_loose_sources_validate_store_without_reserializing(tmp_path, monkeypatch, operation):
+    root = _store(tmp_path / "store")
+    loose = tmp_path / "loose"
+    (loose / "golden_spec").mkdir(parents=True)
+    (loose / "golden_spec-1271640-0").mkdir()
+    (loose / "unified_results.yaml").write_text("generated: true\n")
+    before = {path.relative_to(root): path.read_bytes() for path in root.rglob("*.yaml")}
+    original_load = unified_history._load_store_unlocked
+    loads = []
+
+    def validated(store_root):
+        loads.append(store_root)
+        return original_load(store_root)
+
+    def unexpected_serialization(*args, **kwargs):
+        raise AssertionError("source-free update must not serialize the store")
+
+    monkeypatch.setattr(unified_history, "_load_store_unlocked", validated)
+    monkeypatch.setattr(unified_history, "_store_documents", unexpected_serialization)
+    kwargs = {"complete_snapshot": False} if operation == "update_store_from_loose" else {}
+    operations = {
+        "update_store_from_loose": unified_history.update_store_from_loose,
+        "update_from_loose": unified_history.update_from_loose,
+        "sync_current_corpus": unified_history.sync_current_corpus,
+    }
+    assert operations[operation](root, loose, **kwargs) == []
+    assert loads == [root]
+    assert {path.relative_to(root): path.read_bytes() for path in root.rglob("*.yaml")} == before
+
+
+def test_no_loose_sources_still_reject_invalid_store(tmp_path):
+    root = _store(tmp_path / "store")
+    (root / "unexpected.yaml").write_text("unexpected: true\n")
+    with pytest.raises(ValueError, match="unknown Unified root entry"):
+        unified_history.update_store_from_loose(root, tmp_path / "loose", complete_snapshot=False)
+
+
+@pytest.mark.parametrize("invalid", ["complete", "excluded", "malformed", "required"])
+def test_no_loose_sources_preserve_source_validation(tmp_path, invalid):
+    root = _store(tmp_path / "store")
+    loose = tmp_path / "loose"
+    (loose / "golden_spec").mkdir(parents=True)
+    before = {path.relative_to(root): path.read_bytes() for path in root.rglob("*.yaml")}
+    if invalid == "complete":
+        with pytest.raises(ValueError, match="needs inputs and golden roots"):
+            unified_history.update_store_from_loose(root, loose, complete_snapshot=True)
+    elif invalid == "excluded":
+        with pytest.raises(ValueError, match="absent from the loose corpus"):
+            unified_history.update_store_from_loose(
+                root, loose, complete_snapshot=False, excluded_capture_dirs={"dynamo_v2-0.5.0"},
+            )
+    elif invalid == "malformed":
+        (loose / "dynamo_v2-0.5").mkdir()
+        with pytest.raises(ValueError, match="must use <implementation>-<semantic-version>"):
+            unified_history.update_store_from_loose(root, loose, complete_snapshot=False)
+    else:
+        with pytest.raises(ValueError, match="missing required captures"):
+            unified_history._mutate_store(
+                root,
+                lambda store: unified_history._update_from_loose(
+                    store, loose, complete_snapshot=True, required_capture_dirs={"dynamo_v2-0.5.0"},
+                ),
+                skip_no_sources=True,
+            )
+    assert {path.relative_to(root): path.read_bytes() for path in root.rglob("*.yaml")} == before
+
+
+@pytest.mark.parametrize("updated,skip_no_sources", [(None, False), ({}, True)])
+def test_mutation_no_source_optimization_requires_explicit_marker_and_opt_in(tmp_path, monkeypatch, updated, skip_no_sources):
+    root = _store(tmp_path / "store")
+    original_documents = unified_history._store_documents
+    serialized = []
+
+    def documents(store, **kwargs):
+        serialized.append(store.root)
+        return original_documents(store, **kwargs)
+
+    monkeypatch.setattr(unified_history, "_store_documents", documents)
+    unified_history._mutate_store(root, lambda store: updated, skip_no_sources=skip_no_sources)
+    assert serialized == [root]
+
+
+def test_no_source_optimization_preserves_expected_inventory_precondition(tmp_path):
+    root = _store(tmp_path / "store")
+    expected = unified_history.store_inventory(root)
+    path = root / "families/gemma4/dynamo_v2-0.5.2.yaml"
+    path.write_bytes(path.read_bytes() + b"\n")
+    with pytest.raises(ValueError, match="store generation changed before mutation"):
+        unified_history._mutate_store(root, lambda store: None, skip_no_sources=True, expected_inventory=expected)
+
+
+def test_structured_parser_error_survives_store_and_resolved_record(tmp_path):
     _write_family(tmp_path)
     change = _change()
     detail = {"message": "parser threw", "offset": 17}
@@ -44,10 +136,8 @@ def test_structured_parser_error_survives_store_and_view_projection(tmp_path):
     resolved = store.histories[("gemma4", "dynamo_v2")].resolve("dynamo_v2-0.26.0")["text_only"]
     record, _document = unified_history.materialized_record(store.families["gemma4"].cases["text_only"], resolved)
     assert record["error"] == detail
-    for reader in (table._output_block_model, reasoning_table._reasoning_output_model):
-        projected = reader(record)
-        assert projected["error"] == detail
-        assert markers._error_kind(projected) == "parser_error"
+    assert record["capture_observation"] == {"error": {"code": "legacy_unclassified", "detail": detail}}
+    assert encode_typed(record)[0] == "object"
     assert path.read_bytes() == original
 
 
@@ -64,7 +154,7 @@ def test_materialized_unavailable_reimport_does_not_add_view_metadata(tmp_path):
     resolved = store.histories[("gemma4", "dynamo_v2")].resolve("dynamo_v2-0.26.0")["text_only"]
     record, _document = unified_history.materialized_record(store.families["gemma4"].cases["text_only"], resolved)
     assert "unavailable_code" not in record
-    assert table._unified_capture_failure(record)["unavailable_code"] == "unsupported_request_mode"
+    assert record["capture_observation"] == {"unavailable": payload}
     stimulus, observation, metadata = unified_history._legacy_state(record, b"", "case.yaml", {}, _request())
     assert observation == change["observation"]
     assert metadata == {}
@@ -1057,15 +1147,15 @@ def test_history_rejects_identity_headers_owned_by_the_path(tmp_path, filename, 
         unified_history.load_store(root)
 
 
-def test_history_rejects_parent_chain_fields(tmp_path):
+def test_history_accepts_explicit_preceding_parent(tmp_path):
     root = _store(tmp_path)
     path = root / "families/gemma4/dynamo_v2-0.5.2.yaml"
     document = unified_history.load_yaml(path)
     document["parent"] = "dynamo_v2-0.5.0"
     path.write_text(unified_history.dump_yaml(document), encoding="utf-8")
 
-    with pytest.raises(ValueError, match="unknown fields"):
-        unified_history.load_store(root)
+    history = unified_history.load_store(root).histories[("gemma4", "dynamo_v2")]
+    assert history.captures["dynamo_v2-0.5.2"]["parent"] == "dynamo_v2-0.5.0"
 
 
 def test_history_rejects_a_capture_origin_for_another_version(tmp_path):
@@ -1266,9 +1356,26 @@ def test_materialized_null_labels_follow_stable_owners_after_number_swap(tmp_pat
     ("qwen3", ("be1520f44605ed60b906aa03f7847a9210631d43cec8c967f55ac99186d496bd",
                "697ee3feadda33be06413278e6f213f8361a060793518381713cc19a771c2f4d")),
 ])
-def test_vllm_rust_guided_json_recaptures_preserve_unbound_history(family, original_digests):
+def test_vllm_rust_guided_json_recaptures_preserve_unbound_history(tmp_path, family, original_digests):
     store_root = Path(__file__).resolve().parents[3] / "conformance/fixtures-unified-v2"
-    store = unified_history.load_store(store_root)
+    source = store_root / "families" / family
+    destination = tmp_path / "families" / family
+    destination.mkdir(parents=True)
+    # Sparse snapshots can depend on every preceding checkpoint for this history.
+    with unified_history._store_read_lock(store_root), unified_archives.expanded(store_root) as expanded_root:
+        source = expanded_root / "families" / family
+        for path in [source / "inputs_and_golden.yaml", *sorted(source.glob("vllm_rust-*.yaml"))]:
+            shutil.copyfile(path, destination / path.name)
+            reference = unified_history.load_yaml(path).get("execution")
+            if reference is not None:
+                manifest_path = expanded_root / reference
+                manifest = unified_history.load_yaml(manifest_path)
+                dependencies = [manifest_path, *(expanded_root / digest for digest in manifest.get("receipts", {}))]
+                for dependency in dependencies:
+                    target = tmp_path / dependency.relative_to(expanded_root)
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copyfile(dependency, target)
+    store = unified_history.load_store(tmp_path)
     history = store.histories[(family, "vllm_rust")]
     historical = history.resolve("vllm_rust-0.25.1")
     recaptured = history.resolve("vllm_rust-0.26.0")
@@ -1304,7 +1411,11 @@ def test_vllm_rust_guided_json_recaptures_preserve_unbound_history(family, origi
             implementation="vllm_rust",
             version="0.26.0",
         )
-        assert selected["unavailable"]["code"].startswith("vllm_rust_")
+        typed_unavailable = selected["capture_stimulus"]["unavailable"]
+        assert typed_unavailable["code"].startswith("vllm_rust_")
+        normalized = normalize_unavailable(selected)
+        assert normalized["unavailable"] == typed_unavailable["detail"]
+        assert normalized["unavailable_code"] == "unsupported_request_mode"
         assert "original observation is preserved in YAML" in selected["historical_capture_note"]
 
 

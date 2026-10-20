@@ -1,36 +1,101 @@
-provenance:
-  status: legacy
-  captured_with:
-    vllm_python: 0.31.0
-document:
-  mode: unified
+parent: vllm_python-0.30.0
+execution: executions/2f7aff4df4e9a3f9896529517ed82afff3e15ad353aa91ceabf0f73fc9fc2709.yaml
 changes:
-  guided_json_gt_in_argument_wrapped:
-    observation:
-      value:
-        assembled: []
-        chunks:
-        - expected: []
-        - expected: []
-        - expected: []
-        - expected: []
-  guided_json_narrated_invoke_in_reasoning:
+  arg_json_null_anyof:
+    case_key: UNIFIED.7-4.anyof
+  arg_json_null_const:
+    case_key: UNIFIED.7-4.const
+  arg_json_null_nullable:
+    case_key: UNIFIED.7-4.nullable
+  arg_json_null_oneof:
+    case_key: UNIFIED.7-4.oneof
+  arg_marker_in_string:
+    case_key: UNIFIED.7-2
+  arg_string_null:
+    case_key: UNIFIED.7-5
+  arg_string_null_const:
+    case_key: UNIFIED.7-5.const
+  arg_string_null_enum:
+    case_key: UNIFIED.7-5.enum
+  arg_string_null_sibling_anyof:
+    case_key: UNIFIED.7-5.sibling_anyof
+  arg_string_null_sibling_oneof:
+    case_key: UNIFIED.7-5.sibling_oneof
+  arg_string_null_union:
+    case_key: UNIFIED.7-5.union
+  arg_string_null_untyped_branch:
+    case_key: UNIFIED.7-5.untyped_branch
+  arg_unicode:
+    case_key: UNIFIED.7-1
+  content_then_reason:
+    case_key: UNIFIED.11-7
+  content_then_reason_then_tool:
+    case_key: UNIFIED.11-6
+  deepseek_v41_mixed_control_text_in_string:
+    case_key: UNIFIED.7-3
+  empty_args:
+    case_key: UNIFIED.6-1
+  glm_ref_encoded_targets:
+    case_key: UNIFIED.7-11
+  glm_ref_json_looking_strings:
+    case_key: UNIFIED.7-12
+  glm_ref_object:
+    case_key: UNIFIED.7-9
+  glm_ref_scalar_types:
+    case_key: UNIFIED.7-13
+  guided_json_after_reasoning:
+    case_key: UNIFIED.30-6
+  guided_json_array_argument:
+    case_key: UNIFIED.30-5
+  guided_json_bare_tool_header_recovers_inside_a_thought:
+    case_key: UNIFIED.34-7
     observation:
       value:
         assembled:
         - kind: reasoning
-          text: I'll use
+          text: thinking
         chunks:
-        - expected: []
         - expected:
           - kind: reasoning
-            text: I'll use
+            text: thinking
         - expected: []
         - expected: []
         - expected: []
         - expected: []
-        - expected: []
+  guided_json_escaped_string_args:
+    case_key: UNIFIED.30-4
+  guided_json_gt_in_argument_bare_opener:
+    case_key: UNIFIED.30-13
+  guided_json_gt_in_argument_trailing_close:
+    case_key: UNIFIED.30-11
+  guided_json_gt_in_argument_wrapped:
+    case_key: UNIFIED.30-12
+  guided_json_invalid_call:
+    case_key: UNIFIED.31-1
+  guided_json_list_with_broken_element:
+    case_key: UNIFIED.31-4
+  guided_json_malformed_json:
+    case_key: UNIFIED.31-2
+  guided_json_marker_inside_argument:
+    case_key: UNIFIED.30-7
+  guided_json_named_tool:
+    case_key: UNIFIED.30-1
+  guided_json_narrated_invoke_in_reasoning:
+    case_key: UNIFIED.34-1
+  guided_json_narrated_prefix_inside_reasoning:
+    case_key: UNIFIED.34-5
+  guided_json_native_markup_only:
+    case_key: UNIFIED.32-5
+  guided_json_orphan_reason_close_before_payload:
+    case_key: UNIFIED.34-3
+  guided_json_orphan_tool_close_before_payload:
+    case_key: UNIFIED.32-4
+  guided_json_partial_calls:
+    case_key: UNIFIED.31-3
+  guided_json_prose_before_reasoning:
+    case_key: UNIFIED.34-2
   guided_json_quoted_bare_header_after_payload:
+    case_key: UNIFIED.35-2
     observation:
       value:
         assembled:
@@ -49,6 +114,7 @@ changes:
         - expected: []
         - expected: []
   guided_json_quoted_bare_header_in_answer:
+    case_key: UNIFIED.35-1
     observation:
       value:
         assembled:
@@ -69,42 +135,36 @@ changes:
           - kind: text
             text: '[{"name": "get_weather", "arguments": {"city": "Paris"}}]'
         - expected: []
+  guided_json_required_tool:
+    case_key: UNIFIED.30-2
+  guided_json_schema_error_nameless_element_bare_opener:
+    case_key: UNIFIED.33-9
+  guided_json_schema_error_nameless_element_trailing_close:
+    case_key: UNIFIED.33-7
   guided_json_schema_error_nameless_element_wrapped:
-    observation:
-      value:
-        assembled: []
-        chunks:
-        - expected: []
-        - expected: []
-        - expected: []
-        - expected: []
+    case_key: UNIFIED.33-8
+  guided_json_schema_error_not_a_call_bare_opener:
+    case_key: UNIFIED.33-6
+  guided_json_schema_error_not_a_call_trailing_close:
+    case_key: UNIFIED.33-4
   guided_json_schema_error_not_a_call_wrapped:
-    observation:
-      value:
-        assembled: []
-        chunks:
-        - expected: []
-        - expected: []
-        - expected: []
-        - expected: []
+    case_key: UNIFIED.33-5
+  guided_json_stray_prefix_before_reasoning:
+    case_key: UNIFIED.34-4
+  guided_json_syntax_error_bare_opener:
+    case_key: UNIFIED.33-3
+  guided_json_syntax_error_trailing_close:
+    case_key: UNIFIED.33-1
   guided_json_syntax_error_wrapped:
-    observation:
-      value:
-        assembled: []
-        chunks:
-        - expected: []
-        - expected: []
-        - expected: []
-        - expected: []
+    case_key: UNIFIED.33-2
+  guided_json_tool_close_after_payload:
+    case_key: UNIFIED.32-2
   guided_json_tool_open_before_payload:
-    observation:
-      value:
-        assembled: []
-        chunks:
-        - expected: []
-        - expected: []
-        - expected: []
+    case_key: UNIFIED.32-1
+  guided_json_two_calls:
+    case_key: UNIFIED.30-3
   guided_json_unterminated_reasoning_then_wrapped_payload:
+    case_key: UNIFIED.34-6
     observation:
       value:
         assembled:
@@ -120,1705 +180,3014 @@ changes:
         - expected: []
         - expected: []
   guided_json_wrapped_in_tool_markup:
-    observation:
-      value:
-        assembled: []
-        chunks:
-        - expected: []
-        - expected: []
-        - expected: []
-        - expected: []
+    case_key: UNIFIED.32-3
+  guided_quoted_reasoning_closer_named:
+    case_key: UNIFIED.34-8
+  guided_quoted_reasoning_closer_required:
+    case_key: UNIFIED.34-9
   guided_response_quoted_control_braces_named:
-    observation:
-      value:
-        assembled:
-        - kind: text
-          text: The literal "
-        chunks:
-        - expected:
-          - kind: text
-            text: The literal "
-        - expected: []
-        - expected: []
-        - expected: []
+    case_key: UNIFIED.35-3
   guided_response_quoted_control_braces_required:
+    case_key: UNIFIED.35-4
+  interstitial_text:
+    case_key: UNIFIED.11-5
+  local_schema_id_preserves_type:
+    case_key: UNIFIED.7-16
+  malformed_json_then_two_valid_calls:
+    case_key: UNIFIED.5-4
     observation:
       value:
         assembled:
-        - kind: text
-          text: The literal "
+        - kind: tool_call
+          name: bad
+          arguments: '{"x":"unfinished'
+        - kind: tool_call
+          name: echo
+          arguments:
+            value: é
+        - kind: tool_call
+          name: echo
+          arguments:
+            value: Café
         chunks:
         - expected:
-          - kind: text
-            text: The literal "
+          - kind: tool_call
+            name: bad
+            arguments: '{"x":"unfinished'
+          - kind: tool_call
+            name: echo
+            arguments: '{"value": "é"}'
+          - kind: tool_call
+            name: echo
+            arguments: '{"value": "Café"}'
         - expected: []
-        - expected: []
-        - expected: []
+  narrated_calls:
+    case_key: UNIFIED.8-5
+  native_quoted_control_in_reasoning:
+    case_key: UNIFIED.40-5
   native_quoted_control_in_response:
-    observation:
-      value:
-        assembled:
-        - kind: text
-          text: The literal "
-        chunks:
-        - expected:
-          - kind: text
-            text: The literal "
-        - expected: []
-        - expected: []
-        - expected: []
+    case_key: UNIFIED.8-6
+  native_quoted_control_then_call:
+    case_key: UNIFIED.8-8
+  native_quoted_incomplete_header:
+    case_key: UNIFIED.8-10
+  native_single_quote_contraction_reasoning:
+    case_key: UNIFIED.40-6
   native_single_quote_contraction_response:
-    observation:
-      value:
-        assembled:
-        - kind: text
-          text: 'The literal ''doesn''t '
-        chunks:
-        - expected:
-          - kind: text
-            text: 'The literal ''doesn''t '
-        - expected: []
-        - expected: []
-        - expected: []
+    case_key: UNIFIED.8-11
   native_single_quoted_word_control:
-    observation:
-      value:
-        assembled:
-        - kind: text
-          text: 'The literal ''example '
-        chunks:
-        - expected:
-          - kind: text
-            text: 'The literal ''example '
-        - expected: []
-        - expected: []
-        - expected: []
+    case_key: UNIFIED.8-7
+  native_unmatched_quote_then_call:
+    case_key: UNIFIED.8-9
+  nullable_reference_alias_literals:
+    case_key: UNIFIED.7-15
+  orphan_close_after_prose:
+    case_key: UNIFIED.5-3
+  prefilled_reasoning_redundant_opener:
+    case_key: UNIFIED.41-1
+  prefilled_reasoning_then_text:
+    case_key: UNIFIED.40-4
+  prefilled_reasoning_then_text_then_tool:
+    case_key: UNIFIED.40-3
+  prefilled_reasoning_truncated:
+    case_key: UNIFIED.41-2
+  prefilled_reasoning_with_guided_json:
+    case_key: UNIFIED.40-2
+  prefilled_reasoning_with_tool:
+    case_key: UNIFIED.40-1
+  prefilled_response_reasoning_markers_literal:
+    case_key: UNIFIED.50-4
+  qwen_string_null:
+    case_key: UNIFIED.7-4
+  reason_after_tool:
+    case_key: UNIFIED.11-2
+  reason_between_calls:
+    case_key: UNIFIED.11-9
+  reason_interleaved:
+    case_key: UNIFIED.11-3
+  reason_markup_in_arg:
+    case_key: UNIFIED.12-1
+  reason_markup_in_arg_with_text:
+    case_key: UNIFIED.12-3
+  reason_only:
+    case_key: UNIFIED.10-1
+  reason_then_content:
+    case_key: UNIFIED.10-2
+  reason_then_tool:
+    case_key: UNIFIED.11-1
+  reason_tool_reason_tool_reason:
+    case_key: UNIFIED.11-8
+  reason_tool_text_reason_tool:
+    case_key: UNIFIED.11-4
+  reason_unterminated:
+    case_key: UNIFIED.10-4
   retired__1_2:
-    observation:
-      value:
-        assembled: []
-        chunks:
-        - expected: []
-        - expected: []
-        - expected: []
-        - expected: []
-        - expected: []
-        - expected: []
-        - expected: []
-        - expected: []
-  retired__50_a:
-    absent: true
-  retired__50_b:
-    absent: true
-  retired__50_c:
-    absent: true
-  retired__51_a:
-    absent: true
-  retired__51_b:
-    absent: true
-  retired__muse_1:
-    absent: true
-  tool_block_never_closed_then_text:
-    observation:
-      value:
-        assembled: []
-        chunks:
-        - expected: []
-        - expected: []
-        - expected: []
-  two_reason_spans:
+    case_key: UNIFIED.kimi_k2-1
+  retired__30_14:
+    case_key: UNIFIED.30-14
+  retired__31_33:
+    case_key: UNIFIED.34-8
+  retired__31_40:
+    case_key: UNIFIED.34-9
+  schema_const_array_allof:
     observation:
       value:
         assembled:
-        - kind: reasoning
-          text: first thought
-        - kind: text
-          text: interlude <think>second thoughtdone
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: '[1,2]'
         chunks:
-        - expected: []
         - expected:
           - kind: reasoning
-            text: first thought
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
         - expected: []
         - expected:
-          - kind: text
-            text: 'interlude '
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "[1,2]"'
         - expected:
-          - kind: text
-            text: <think>
-        - expected:
-          - kind: text
-            text: second thought
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
         - expected: []
-        - expected:
-          - kind: text
-            text: done
         - expected: []
-metadata_changes:
-  schema_const_array_allof:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
   schema_const_array_bare:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: '[1,2]'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "[1,2]"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_array_ref:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: '[1,2]'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "[1,2]"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_array_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: '[1,2]'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "[1,2]"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_boolean_allof:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: 'true'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "true"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_boolean_bare:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: 'true'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "true"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_boolean_ref:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: 'true'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "true"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_boolean_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: 'true'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "true"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_entity_allof:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: '&lt;'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "&lt;"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_entity_bare:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: '&lt;'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "&lt;"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_entity_ref:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: '&lt;'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "&lt;"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_entity_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: '&lt;'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "&lt;"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_null_allof:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: 'null'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "null"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_null_bare:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: 'null'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "null"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_null_ref:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: 'null'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "null"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_null_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: 'null'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "null"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_number_allof:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: '42'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "42"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_number_bare:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: '42'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "42"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_number_ref:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: '42'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "42"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_number_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: '42'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "42"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_object_allof:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: '{"x":1}'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "{\"x\":1}"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_object_bare:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: '{"x":1}'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "{\"x\":1}"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_object_ref:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: '{"x":1}'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "{\"x\":1}"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_object_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: '{"x":1}'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "{\"x\":1}"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_plain_allof:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_plain_bare:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_plain_ref:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_plain_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_quoted_allof:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: '"hello"'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "\"hello\""'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_quoted_bare:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: '"hello"'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "\"hello\""'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_quoted_ref:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: '"hello"'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "\"hello\""'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_quoted_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: '"hello"'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "\"hello\""'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_space_allof:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: '  spaced  '
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "  spaced  "'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_space_bare:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: '  spaced  '
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "  spaced  "'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_space_ref:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: '  spaced  '
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "  spaced  "'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_space_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: '  spaced  '
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "  spaced  "'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_unicode_allof:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: café
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "café"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_unicode_bare:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: café
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "café"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_unicode_ref:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: café
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "café"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_const_unicode_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: café
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "café"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_declared_array:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value:
+            - 1
+            - 2
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": [1, 2]'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_declared_boolean:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: true
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": true'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_declared_integer:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: 42
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": 42'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_declared_null:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: null
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": null'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_declared_number:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: 3.5
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": 3.5'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_declared_object:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value:
+              x: 1
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": {"x": 1}'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_declared_string:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: plain
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "plain"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_enum_integer:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: 42
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": 42'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_enum_string:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: '42'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "42"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_escaped_ref_const:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: '"hello"'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "\"hello\""'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_id_direct_integer:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: 42
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": 42'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_integer_const_ambiguous:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: 42
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "42"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_intersection_anyof:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: 42
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": 42'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_intersection_oneof:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: 42
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": 42'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_null_union_ambiguous:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: null
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": null'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_nullable_string:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: 'null'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": null'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_object_const_union:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value:
+              x: 1
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "{\"x\":1}"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_percent_ref_const:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: '42'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "42"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_ref_sibling_integer:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: 42
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": 42'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_ref_union_anyof_integer:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: '-7'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": -7'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_ref_union_anyof_string:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_ref_union_oneof_integer:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: '-7'
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": -7'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_ref_union_oneof_string:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_type_array_integer_null:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: 42
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": 42'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_type_array_integer_null_null:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: null
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": null'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_type_array_string_integer:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: 42
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "42"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_anyof_array_reverse_string:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_anyof_array_reverse_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value:
+            - 1
+            - 2
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": [1, 2]'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_anyof_array_string:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_anyof_array_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value:
+            - 1
+            - 2
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": [1, 2]'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_anyof_boolean_reverse_string:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_anyof_boolean_reverse_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: true
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": true'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_anyof_boolean_string:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_anyof_boolean_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: true
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": true'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_anyof_integer_reverse_string:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_anyof_integer_reverse_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: 42
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": 42'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_anyof_integer_string:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_anyof_integer_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: 42
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": 42'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_anyof_null_reverse_string:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_anyof_null_reverse_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: null
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": null'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_anyof_null_string:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_anyof_null_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: null
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": null'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_anyof_number_reverse_string:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_anyof_number_reverse_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: 3.5
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": 3.5'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_anyof_number_string:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_anyof_number_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: 3.5
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": 3.5'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_anyof_object_reverse_string:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_anyof_object_reverse_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value:
+              x: 1
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": {"x": 1}'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_anyof_object_string:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_anyof_object_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value:
+              x: 1
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": {"x": 1}'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_oneof_array_reverse_string:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_oneof_array_reverse_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value:
+            - 1
+            - 2
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": [1, 2]'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_oneof_array_string:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_oneof_array_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value:
+            - 1
+            - 2
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": [1, 2]'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_oneof_boolean_reverse_string:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_oneof_boolean_reverse_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: true
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": true'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_oneof_boolean_string:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_oneof_boolean_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: true
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": true'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_oneof_integer_reverse_string:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_oneof_integer_reverse_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: 42
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": 42'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_oneof_integer_string:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_oneof_integer_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: 42
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": 42'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_oneof_null_reverse_string:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_oneof_null_reverse_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: null
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": null'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_oneof_null_string:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_oneof_null_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: null
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": null'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_oneof_number_reverse_string:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_oneof_number_reverse_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: 3.5
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": 3.5'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_oneof_number_string:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_oneof_number_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: 3.5
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": 3.5'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_oneof_object_reverse_string:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_oneof_object_reverse_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value:
+              x: 1
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": {"x": 1}'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_oneof_object_string:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value: auto
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": "auto"'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
   schema_union_oneof_object_typed:
-    vllm_capture_provenance:
-      implementation: vllm_python
-      version: 0.31.0
-      source_sha256: 440a8f1bc30b96c543631a2d391e89ae2c4f02be2d058d47217c41786957548b
-      adapter_sha256: a0fe09ef6c5ec9fb3053917ee0a8de387bcd775d026993a792c4dfa11305cf88
-      job_sha256: 29884ede65343b29df13e035612616422714e2fc5c19e248bb7d2eaea510c982
-document_overrides:
-  glm_ref_encoded_targets:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  glm_ref_json_looking_strings:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  glm_ref_object:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  glm_ref_scalar_types:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  guided_quoted_reasoning_closer_named:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  guided_quoted_reasoning_closer_required:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  local_schema_id_preserves_type:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  native_quoted_control_in_reasoning:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  native_quoted_control_then_call:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  native_quoted_incomplete_header:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  native_single_quote_contraction_reasoning:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  native_unmatched_quote_then_call:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  nullable_reference_alias_literals:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_array_allof:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_array_bare:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_array_ref:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_array_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_boolean_allof:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_boolean_bare:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_boolean_ref:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_boolean_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_entity_allof:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_entity_bare:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_entity_ref:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_entity_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_null_allof:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_null_bare:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_null_ref:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_null_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_number_allof:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_number_bare:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_number_ref:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_number_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_object_allof:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_object_bare:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_object_ref:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_object_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_plain_allof:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_plain_bare:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_plain_ref:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_plain_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_quoted_allof:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_quoted_bare:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_quoted_ref:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_quoted_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_space_allof:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_space_bare:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_space_ref:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_space_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_unicode_allof:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_unicode_bare:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_unicode_ref:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_const_unicode_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_declared_array:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_declared_boolean:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_declared_integer:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_declared_null:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_declared_number:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_declared_object:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_declared_string:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_enum_integer:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_enum_string:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_escaped_ref_const:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_id_direct_integer:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_integer_const_ambiguous:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_intersection_anyof:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_intersection_oneof:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_null_union_ambiguous:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_nullable_string:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_object_const_union:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_percent_ref_const:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_ref_sibling_integer:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_ref_union_anyof_integer:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_ref_union_anyof_string:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_ref_union_oneof_integer:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_ref_union_oneof_string:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_type_array_integer_null:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_type_array_integer_null_null:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_type_array_string_integer:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_anyof_array_reverse_string:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_anyof_array_reverse_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_anyof_array_string:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_anyof_array_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_anyof_boolean_reverse_string:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_anyof_boolean_reverse_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_anyof_boolean_string:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_anyof_boolean_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_anyof_integer_reverse_string:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_anyof_integer_reverse_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_anyof_integer_string:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_anyof_integer_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_anyof_null_reverse_string:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_anyof_null_reverse_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_anyof_null_string:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_anyof_null_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_anyof_number_reverse_string:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_anyof_number_reverse_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_anyof_number_string:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_anyof_number_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_anyof_object_reverse_string:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_anyof_object_reverse_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_anyof_object_string:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_anyof_object_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_oneof_array_reverse_string:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_oneof_array_reverse_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_oneof_array_string:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_oneof_array_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_oneof_boolean_reverse_string:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_oneof_boolean_reverse_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_oneof_boolean_string:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_oneof_boolean_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_oneof_integer_reverse_string:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_oneof_integer_reverse_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_oneof_integer_string:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_oneof_integer_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_oneof_null_reverse_string:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_oneof_null_reverse_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_oneof_null_string:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_oneof_null_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_oneof_number_reverse_string:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_oneof_number_reverse_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_oneof_number_string:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_oneof_number_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_oneof_object_reverse_string:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_oneof_object_reverse_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_oneof_object_string:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
-  schema_union_oneof_object_typed:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
+    observation:
+      value:
+        assembled:
+        - kind: tool_call
+          name: schema_probe
+          arguments:
+            value:
+              x: 1
+        chunks:
+        - expected:
+          - kind: reasoning
+            text: <|tool_calls_section_begin|>
+        - expected: []
+        - expected: []
+        - expected: []
+        - expected:
+          - kind: tool_call
+            name: schema_probe
+            arguments: '{"value": {"x": 1}'
+        - expected:
+          - kind: tool_call
+            name: null
+            arguments: '}<|tool_call_end|>'
+        - expected: []
+        - expected: []
+  text_before_tool:
+    case_key: UNIFIED.8-1
+  text_between_calls:
+    case_key: UNIFIED.8-4
+  text_only:
+    case_key: UNIFIED.3-1
+  text_reason_tool_text_reason_tool:
+    case_key: UNIFIED.11-10
+  text_sandwich:
+    case_key: UNIFIED.8-3
+  tool_block_never_closed_then_text:
+    case_key: UNIFIED.4-1
+  tool_in_reason:
+    case_key: UNIFIED.12-2
+  tool_in_reason_with_text:
+    case_key: UNIFIED.12-4
+  tool_markup_only_emits_nothing:
+    case_key: UNIFIED.4-2
+  tool_no_close:
+    case_key: UNIFIED.5-2
+  tool_only:
+    case_key: UNIFIED.1-1
+  trailing_text_after_tool:
+    case_key: UNIFIED.8-2
+  truncated_tool_eof:
+    case_key: UNIFIED.5-1
+  two_adjacent_reason_spans:
+    case_key: UNIFIED.10-5
+  two_calls:
+    case_key: UNIFIED.2-1
+  two_calls_same_name:
+    case_key: UNIFIED.2-2
+  two_reason_spans:
+    case_key: UNIFIED.10-3
   unused_reference_graph_parameter_types:
-    capture_provenance:
-      captured_with:
-        vllm_python: 0.31.0
-      capture_origin: null
-      inherited_from: null
+    case_key: UNIFIED.7-14

@@ -86,11 +86,17 @@ pub fn replay_chunks(input: &str, recorded: Option<&[InputChunk]>) -> Vec<String
     }
 }
 
+#[cfg(all(not(conformance_split_only), conformance_legacy_delta))]
+pub type NativeEvent = dynamo_parsers_v2::UnifiedDelta;
+#[cfg(all(not(conformance_split_only), not(conformance_legacy_delta)))]
+pub type NativeEvent = dynamo_parsers_v2::UnifiedParserEvent;
+
 #[cfg(not(conformance_split_only))]
 pub fn native_capture(
     parser: &mut Box<dyn dynamo_parsers_v2::UnifiedParser>,
     chunks: &[String],
-) -> Result<Vec<Vec<dynamo_parsers_v2::UnifiedParserEvent>>, CaptureFailure> {
+) -> Result<Vec<Vec<NativeEvent>>, CaptureFailure> {
+    #[cfg(not(conformance_legacy_delta))]
     use dynamo_parsers_v2::UnifiedParserExt;
     let mut rows = Vec::new();
     for chunk in chunks {
