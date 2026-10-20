@@ -345,7 +345,18 @@ def test_case_schema_metadata_survives_model_serialization():
 
 def test_rendered_model_carries_only_explicit_unified_case_schemas(model_v2):
     columns = {column["sub"]: column for column in _tab(model_v2, "tab-unified")["columns"]}
-    assert "schemas" not in columns["tool_only"]
+    assert "schemas" not in columns["reason_only"]
+    schemas = columns["tool_only"]["schemas"]
+    assert len(schemas) == 1
+    assert schemas[0]["tools"] == [{"name": "lookup", "parameters": {
+        "type": "object", "properties": {"q": {"type": "string"}},
+    }}]
+    assert set(schemas[0]["families"]) == {"kimi_k2", "kimi_k3"}
+    assert len(schemas[0]["cases"]) == 1
+    association = schemas[0]["cases"][0]
+    assert association["case_id"] == "UNIFIED.gpt_oss-tool_body_whitespace"
+    assert association["label"] == "Leading JSON body whitespace"
+    assert set(association["families"]) == {"kimi_k2", "kimi_k3"}
     assert columns["schema_declared_integer"]["schemas"]
     assert columns["schema_declared_integer"]["schemas"][0]["tools"][0]["name"]
 
@@ -599,7 +610,7 @@ def test_unified_tab_keeps_every_captured_vllm_parser_version(model_v2):
         all(cell["cmp"][key].get("na") == 1 for key in peer_keys)
         for cell in muse["cells"].values()
     )
-    muse_tip = next(iter(muse["cells"].values()))["tooltip"]
+    muse_tip = leaf_cells(muse)["tool_only"]["tooltip"]
     # Fresh request-bound classifications retain their release identity even
     # when both releases lack the same parser.
     for key, version in (("vllm_rust", "0.25.1"), ("vllm_rust@0.26.0", "0.26.0")):
@@ -1856,7 +1867,8 @@ def test_argument_sections_and_folds_preserve_all_authored_scenarios(model_v2):
     assert len(columns) == 60
     assert [column["display_number"] for column in columns] == list(range(1, 61))
     expected = {scenario for scenario in unified_taxonomy.UNIFIED_TAX if unified_taxonomy.display_tax(scenario)[0] == 7}
-    assert len(expected) == 142
+    assert len(expected) == 143
+    assert "gpt_oss_quoted_message_header_literal" in expected
     found = set()
     for row in tab["rows"]:
         if row.get("section"):
