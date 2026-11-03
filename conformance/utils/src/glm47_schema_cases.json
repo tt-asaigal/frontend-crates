@@ -1778,11 +1778,9 @@
         }
       ]
     },
-    "value": "42",
+    "value": 42,
     "raw": "42",
-    "grammar": false,
-    "conformance": false,
-    "note": "Existing unrestricted string hint wins; parser-only compatibility control, string 42 is schema-invalid."
+    "grammar": false
   },
   {
     "name": "type_array_string_integer",
@@ -1792,7 +1790,7 @@
         "integer"
       ]
     },
-    "value": "42",
+    "value": 42,
     "raw": "42"
   },
   {

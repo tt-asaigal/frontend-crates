@@ -537,16 +537,107 @@ fn coerce_value(raw: &str, schema_type: Option<&str>) -> ParsedValue {
 }
 
 /// Look up the JSON Schema type for a parameter by name from a tool's parameter schema.
-fn get_param_schema_type<'a>(
-    tools: Option<&'a [ToolDefinition]>,
+///
+/// The parameter's schema is found through the root's composition keywords
+/// (`anyOf`/`oneOf`/`allOf`, `if`/`then`/`else`, local `$ref`), not only a
+/// top-level `properties`. When the raw text parses as a JSON scalar and the
+/// schema admits that type, the scalar wins over a bare `string` branch; a
+/// string `const`/`enum` member that equals the text keeps it as a string. A
+/// schema with no type information at all takes the type the text parses as.
+fn get_param_schema_type(
+    tools: Option<&[ToolDefinition]>,
     function_name: &str,
     param_name: &str,
     raw: &str,
-) -> Option<&'a str> {
+) -> Option<&'static str> {
     let tool = tools?.iter().find(|t| t.name == function_name)?;
     let schema = tool.parameters.as_ref()?;
-    let props = schema.get("properties")?;
-    let param = props.get(param_name)?;
+    let mut found: Vec<&Value> = Vec::new();
+    let mut remaining = MAX_PARAM_LOOKUP_NODES;
+    find_param_schemas(schema, schema, param_name, 0, &mut remaining, &mut found);
+    // Several branches may each declare the parameter: treat them as a union.
+    let union: Value;
+    let param: &Value = match found.as_slice() {
+        [] => return None,
+        [single] => single,
+        many => {
+            union = serde_json::json!({
+                "anyOf": many.iter().map(|v| (*v).clone()).collect::<Vec<Value>>()
+            });
+            &union
+        }
+    };
+    get_param_schema_type_for(schema, param, raw)
+}
+
+const MAX_PARAM_LOOKUP_NODES: usize = 4096;
+
+/// Collect every schema the root assigns to `param_name`, following the
+/// composition keywords a tool schema may wrap its object in.
+fn find_param_schemas<'a>(
+    root: &'a Value,
+    node: &'a Value,
+    param_name: &str,
+    depth: usize,
+    remaining: &mut usize,
+    out: &mut Vec<&'a Value>,
+) {
+    if depth > 16 || *remaining == 0 {
+        return;
+    }
+    *remaining -= 1;
+    if node.get("$dynamicRef").is_some()
+        || node.get("$recursiveRef").is_some()
+        || (node.get("$id").is_some() && !std::ptr::eq(node, root))
+    {
+        return;
+    }
+    if let Some(param) = node
+        .get("properties")
+        .and_then(|props| props.get(param_name))
+        && !out.iter().any(|seen| std::ptr::eq(*seen, param))
+    {
+        out.push(param);
+    }
+    if let Some(target) = node
+        .get("$ref")
+        .and_then(Value::as_str)
+        .and_then(|reference| resolve_local_schema_ref(reference, root))
+    {
+        find_param_schemas(root, target, param_name, depth + 1, remaining, out);
+    }
+    for keyword in ["anyOf", "oneOf", "allOf"] {
+        if let Some(options) = node.get(keyword).and_then(Value::as_array) {
+            for option in options {
+                find_param_schemas(root, option, param_name, depth + 1, remaining, out);
+            }
+        }
+    }
+    for keyword in ["if", "then", "else"] {
+        if let Some(sub) = node.get(keyword) {
+            find_param_schemas(root, sub, param_name, depth + 1, remaining, out);
+        }
+    }
+}
+
+fn static_type_name(name: &str) -> Option<&'static str> {
+    Some(match name {
+        "string" => "string",
+        "integer" => "integer",
+        "int" => "int",
+        "number" => "number",
+        "float" => "float",
+        "double" => "double",
+        "boolean" => "boolean",
+        "bool" => "bool",
+        "array" => "array",
+        "object" => "object",
+        "null" => "null",
+        _ => return None,
+    })
+}
+
+fn get_param_schema_type_for(schema: &Value, param: &Value, raw: &str) -> Option<&'static str> {
     // Prefer JSON null for a bare null when the schema permits it. The wire
     // spelling can also represent a string; keep string preference for other values.
     if raw.trim() == "null" {
@@ -556,36 +647,165 @@ fn get_param_schema_type<'a>(
             "string"
         });
     }
-    // Prefer string in unions because JSON-looking text is ambiguous.
-    if schema_has_type(schema, param, "string", raw) {
+    // A string constant or enum member equal to the text claims it verbatim.
+    if schema_string_literal_claims(schema, param, raw) {
         return Some("string");
     }
-    if let Some(schema_type) = param.get("type").and_then(Value::as_str) {
-        return Some(schema_type);
-    }
-    // Select a scalar hint from a union using the JSON value, not branch order.
-    let raw = raw.trim();
-    if !matches!(
-        raw.as_bytes().first(),
+    // Candidate scalar types from the JSON value, not branch order.
+    let trimmed = raw.trim();
+    let candidates: &[&str] = if !matches!(
+        trimmed.as_bytes().first(),
         Some(b'n' | b't' | b'f' | b'-' | b'0'..=b'9')
     ) {
-        return None;
-    }
-    // Preserve the integer coercer's arbitrary-length path before Value's numeric limit.
-    let candidates: &[&str] = if super::parsed_value::is_integer_literal(raw) {
+        &[]
+    } else if super::parsed_value::is_integer_literal(trimmed) {
+        // Preserve the integer coercer's arbitrary-length path before Value's numeric limit.
         &["integer", "number"]
     } else {
-        match serde_json::from_str::<Value>(raw).ok()? {
-            Value::Null => &["null"],
-            Value::Bool(_) => &["boolean"],
-            Value::Number(_) => &["number"],
+        match serde_json::from_str::<Value>(trimmed).ok() {
+            Some(Value::Null) => &["null"],
+            Some(Value::Bool(_)) => &["boolean"],
+            Some(Value::Number(_)) => &["number"],
             _ => &[],
         }
     };
-    candidates
-        .iter()
-        .copied()
-        .find(|candidate| schema_has_type(schema, param, candidate, raw))
+    let mut all_unknown = true;
+    for candidate in candidates {
+        match schema_type_hint(schema, param, candidate, raw) {
+            Some(true) => return Some(candidate),
+            // An integral value a schema rejects as an integer is rejected as a number too.
+            Some(false) => {
+                all_unknown = false;
+                if *candidate == "integer" {
+                    break;
+                }
+            }
+            None => {}
+        }
+    }
+    match schema_type_hint(schema, param, "string", raw) {
+        Some(true) => return Some("string"),
+        Some(false) => all_unknown = false,
+        None => {}
+    }
+    if let Some(schema_type) = param.get("type").and_then(Value::as_str) {
+        return static_type_name(schema_type);
+    }
+    // A schema that resolves fully yet names no type takes what the text parses as.
+    // Unresolvable, cyclic or scoped references stay conservative: verbatim text.
+    if all_unknown && schema_fully_resolvable(schema, param) {
+        return candidates.first().copied();
+    }
+    None
+}
+
+fn schema_fully_resolvable(root: &Value, schema: &Value) -> bool {
+    let mut remaining = 1024;
+    let mut active: Vec<&Value> = Vec::new();
+    schema_resolvable(root, schema, 0, &mut remaining, &mut active)
+}
+
+fn schema_resolvable<'a>(
+    root: &'a Value,
+    schema: &'a Value,
+    depth: usize,
+    remaining: &mut usize,
+    active: &mut Vec<&'a Value>,
+) -> bool {
+    if depth > 16 || *remaining == 0 {
+        return false;
+    }
+    *remaining -= 1;
+    if schema.get("$dynamicRef").is_some()
+        || schema.get("$recursiveRef").is_some()
+        || (schema.get("$id").is_some() && !std::ptr::eq(schema, root))
+    {
+        return false;
+    }
+    if let Some(reference) = schema.get("$ref") {
+        let Some(target) = reference
+            .as_str()
+            .and_then(|reference| resolve_local_schema_ref(reference, root))
+        else {
+            return false;
+        };
+        if active.iter().any(|seen| std::ptr::eq(*seen, target)) {
+            return false;
+        }
+        active.push(target);
+        let ok = schema_resolvable(root, target, depth + 1, remaining, active);
+        active.pop();
+        if !ok {
+            return false;
+        }
+    }
+    for keyword in ["anyOf", "oneOf", "allOf"] {
+        if let Some(options) = schema.get(keyword).and_then(Value::as_array)
+            && !options
+                .iter()
+                .all(|option| schema_resolvable(root, option, depth + 1, remaining, active))
+        {
+            return false;
+        }
+    }
+    ["not", "if", "then", "else"].iter().all(|keyword| {
+        schema
+            .get(keyword)
+            .is_none_or(|sub| schema_resolvable(root, sub, depth + 1, remaining, active))
+    })
+}
+
+fn schema_type_hint(root: &Value, schema: &Value, expected: &str, raw: &str) -> Option<bool> {
+    let mut remaining = 1024;
+    let matched = schema_type_match(root, schema, expected, raw, 0, &mut remaining);
+    (remaining > 0).then_some(matched).flatten()
+}
+
+/// Whether a string `const` or `enum` member reachable from `schema` equals `raw`.
+fn schema_string_literal_claims(root: &Value, schema: &Value, raw: &str) -> bool {
+    let mut remaining = 1024;
+    string_literal_claims(root, schema, raw, 0, &mut remaining)
+}
+
+fn string_literal_claims(
+    root: &Value,
+    schema: &Value,
+    raw: &str,
+    depth: usize,
+    remaining: &mut usize,
+) -> bool {
+    if depth > 16 || *remaining == 0 || schema.get("$id").is_some() && !std::ptr::eq(schema, root) {
+        return false;
+    }
+    *remaining -= 1;
+    if schema.get("const").and_then(Value::as_str) == Some(raw) {
+        return true;
+    }
+    if schema
+        .get("enum")
+        .and_then(Value::as_array)
+        .is_some_and(|members| members.iter().any(|m| m.as_str() == Some(raw)))
+    {
+        return true;
+    }
+    if schema
+        .get("$ref")
+        .and_then(Value::as_str)
+        .and_then(|reference| resolve_local_schema_ref(reference, root))
+        .is_some_and(|target| string_literal_claims(root, target, raw, depth + 1, remaining))
+    {
+        return true;
+    }
+    ["anyOf", "oneOf", "allOf"].iter().any(|keyword| {
+        schema
+            .get(keyword)
+            .and_then(Value::as_array)
+            .is_some_and(|options| {
+                options
+                    .iter()
+                    .any(|option| string_literal_claims(root, option, raw, depth + 1, remaining))
+            })
+    })
 }
 
 const MAX_NULL_SCHEMA_REF_DEPTH: usize = 16;
@@ -842,6 +1062,43 @@ fn schema_type_match(
                     _ => None,
                 })
                 .flatten()
+        };
+        hint = match (hint, branch_hint) {
+            (Some(left), Some(right)) => Some(left && right),
+            (left, right) => left.or(right),
+        };
+    }
+    // `not`: a type the negated schema proves is excluded; one it proves
+    // absent is admitted. An unknown inner hint stays unknown.
+    if let Some(negated) = schema.get("not") {
+        let not_hint =
+            schema_type_match(root, negated, expected, raw, depth + 1, remaining).map(|b| !b);
+        hint = match (hint, not_hint) {
+            (Some(left), Some(right)) => Some(left && right),
+            (left, right) => left.or(right),
+        };
+    }
+    // `if`/`then`/`else`: the value may satisfy `if` and `then`, or fail `if`
+    // and satisfy `else`; the hint is the union of the two paths.
+    if let Some(condition) = schema.get("if") {
+        let cond = schema_type_match(root, condition, expected, raw, depth + 1, remaining);
+        let then_hint = schema
+            .get("then")
+            .map(|sub| schema_type_match(root, sub, expected, raw, depth + 1, remaining));
+        let else_hint = schema
+            .get("else")
+            .map(|sub| schema_type_match(root, sub, expected, raw, depth + 1, remaining));
+        let and = |left: Option<bool>, right: Option<Option<bool>>| match (left, right) {
+            (Some(l), Some(Some(r))) => Some(l && r),
+            (l, Some(r)) => l.or(r),
+            (l, None) => l,
+        };
+        let when_true = and(cond, then_hint);
+        let when_false = and(cond.map(|c| !c), else_hint);
+        let branch_hint = match (when_true, when_false) {
+            (Some(true), _) | (_, Some(true)) => Some(true),
+            (Some(false), Some(false)) => Some(false),
+            _ => None,
         };
         hint = match (hint, branch_hint) {
             (Some(left), Some(right)) => Some(left && right),
@@ -1107,11 +1364,6 @@ mod tests {
     fn string_constant_unions_keep_existing_ambiguity_rules() {
         for (parameter, raw, expected) in [
             (
-                serde_json::json!({"anyOf": [{"type": "string"}, {"type": "integer"}]}),
-                "42",
-                serde_json::json!("42"),
-            ),
-            (
                 serde_json::json!({"anyOf": [{"const": "42"}, {"type": "integer"}]}),
                 "42",
                 serde_json::json!("42"),
@@ -1143,6 +1395,181 @@ mod tests {
                 "schema={parameter}, raw={raw:?}"
             );
         }
+    }
+
+    #[test]
+    fn plain_string_unions_prefer_the_parsed_scalar() {
+        for parameter in [
+            serde_json::json!({"type": ["string", "integer"]}),
+            serde_json::json!({"type": ["integer", "string"]}),
+            serde_json::json!({"anyOf": [{"type": "string"}, {"type": "integer"}]}),
+            serde_json::json!({"oneOf": [{"type": "integer"}, {"type": "string"}]}),
+            serde_json::json!({"anyOf": [{"type": "string", "enum": ["auto"]}, {"type": "integer"}]}),
+        ] {
+            assert_eq!(
+                parse_schema_value(parameter.clone(), "42"),
+                serde_json::json!(42),
+                "{parameter}"
+            );
+            assert_eq!(
+                parse_schema_value(parameter.clone(), "-4200"),
+                serde_json::json!(-4200),
+                "{parameter}"
+            );
+            assert_eq!(
+                parse_schema_value(parameter.clone(), "auto"),
+                serde_json::json!("auto"),
+                "{parameter}"
+            );
+            assert_eq!(parse_schema_value(parameter, "4a"), serde_json::json!("4a"));
+        }
+        for parameter in [
+            serde_json::json!({"type": ["string", "number"]}),
+            serde_json::json!({"anyOf": [{"type": "number"}, {"type": "string"}]}),
+        ] {
+            assert_eq!(
+                parse_schema_value(parameter.clone(), "21.5"),
+                serde_json::json!(21.5),
+                "{parameter}"
+            );
+            assert_eq!(
+                parse_schema_value(parameter, "-4.5"),
+                serde_json::json!(-4.5)
+            );
+        }
+        for parameter in [
+            serde_json::json!({"type": ["string", "boolean"]}),
+            serde_json::json!({"anyOf": [{"type": "boolean"}, {"type": "string"}]}),
+        ] {
+            assert_eq!(
+                parse_schema_value(parameter.clone(), "false"),
+                serde_json::json!(false),
+                "{parameter}"
+            );
+            assert_eq!(
+                parse_schema_value(parameter, "maybe"),
+                serde_json::json!("maybe")
+            );
+        }
+        // A bare string type still takes the text verbatim.
+        assert_eq!(
+            parse_schema_value(serde_json::json!({"type": "string"}), "42"),
+            serde_json::json!("42")
+        );
+    }
+
+    #[test]
+    fn untyped_schemas_take_the_parsed_scalar() {
+        let defs = serde_json::json!({"Any": {}, "Wrapped": {"$ref": "#/$defs/Any"}});
+        for parameter in [
+            serde_json::json!({}),
+            serde_json::json!({"description": "no type"}),
+            serde_json::json!({"minimum": 0}),
+            serde_json::json!({"anyOf": [{}, {"type": "null"}]}),
+            serde_json::json!({"allOf": [{}]}),
+            serde_json::json!({"$ref": "#/$defs/Wrapped"}),
+        ] {
+            let tools = vec![ToolDefinition {
+                name: "probe".into(),
+                parameters: Some(serde_json::json!({
+                    "type": "object", "properties": {"value": parameter}, "$defs": defs
+                })),
+                strict: None,
+            }];
+            for (raw, expected) in [
+                ("37", serde_json::json!(37)),
+                ("-0.75", serde_json::json!(-0.75)),
+                ("false", serde_json::json!(false)),
+                ("hello", serde_json::json!("hello")),
+            ] {
+                let wire = format!(
+                    "<tool_call>probe<arg_key>value</arg_key><arg_value>{raw}</arg_value></tool_call>"
+                );
+                let (calls, _) =
+                    try_tool_call_parse_glm47(&wire, &get_test_config(), Some(&tools)).unwrap();
+                let arguments: Value = serde_json::from_str(&calls[0].function.arguments).unwrap();
+                assert_eq!(
+                    arguments["value"], expected,
+                    "schema={parameter}, raw={raw}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn not_and_conditional_schemas_hint_types() {
+        assert_eq!(
+            parse_schema_value(serde_json::json!({"not": {"type": "string"}}), "-2500"),
+            serde_json::json!(-2500)
+        );
+        assert_eq!(
+            parse_schema_value(serde_json::json!({"not": {"type": "integer"}}), "2500"),
+            serde_json::json!("2500")
+        );
+        let conditional = serde_json::json!({
+            "if": {"type": "integer"}, "then": {"minimum": -10000}, "else": {"type": "string"}
+        });
+        assert_eq!(
+            parse_schema_value(conditional.clone(), "-2500"),
+            serde_json::json!(-2500)
+        );
+        assert_eq!(
+            parse_schema_value(conditional, "later"),
+            serde_json::json!("later")
+        );
+    }
+
+    #[test]
+    fn root_combinators_resolve_parameter_schemas() {
+        let wire = |name: &str, key: &str, raw: &str| {
+            format!(
+                "<tool_call>{name}<arg_key>{key}</arg_key><arg_value>{raw}</arg_value></tool_call>"
+            )
+        };
+        let parse = |parameters: Value, key: &str, raw: &str| -> Value {
+            let tools = vec![ToolDefinition {
+                name: "probe".into(),
+                parameters: Some(parameters),
+                strict: None,
+            }];
+            let (calls, _) = try_tool_call_parse_glm47(
+                &wire("probe", key, raw),
+                &get_test_config(),
+                Some(&tools),
+            )
+            .unwrap();
+            let arguments: Value = serde_json::from_str(&calls[0].function.arguments).unwrap();
+            arguments[key].clone()
+        };
+        let ticket = serde_json::json!({"type": "object", "properties": {"ticket_id": {"type": "integer"}},
+            "required": ["ticket_id"], "additionalProperties": false});
+        let reference = serde_json::json!({"type": "object", "properties": {"reference_code": {"type": "string"}},
+            "required": ["reference_code"], "additionalProperties": false});
+        for root in [
+            serde_json::json!({"anyOf": [ticket, reference]}),
+            serde_json::json!({"oneOf": [reference, ticket]}),
+            serde_json::json!({"allOf": [ticket]}),
+            serde_json::json!({"type": "object", "anyOf": [ticket, reference]}),
+            serde_json::json!({"$ref": "#/$defs/Args", "$defs": {"Args": ticket}}),
+            serde_json::json!({"if": {"required": ["ticket_id"]}, "then": ticket, "else": reference}),
+        ] {
+            assert_eq!(
+                parse(root.clone(), "ticket_id", "48213"),
+                serde_json::json!(48213),
+                "{root}"
+            );
+            assert_eq!(
+                parse(root, "reference_code", "TCK-1"),
+                serde_json::json!("TCK-1")
+            );
+        }
+        // The same key typed differently per branch is a union of the branches.
+        let either = serde_json::json!({"anyOf": [
+            {"type": "object", "properties": {"id": {"type": "integer"}}},
+            {"type": "object", "properties": {"id": {"type": "string", "enum": ["latest"]}}}
+        ]});
+        assert_eq!(parse(either.clone(), "id", "7"), serde_json::json!(7));
+        assert_eq!(parse(either, "id", "latest"), serde_json::json!("latest"));
     }
 
     #[test]
@@ -2533,14 +2960,14 @@ mod enum_const_type_hint {
             run(serde_json::json!({"type":"string"}), "7"),
             serde_json::json!("7")
         );
-        // a declared string type keeps the unrestricted string hint, even in a
-        // union (schema matrix case typed_enum_union)
+        // a declared string type with members claims only its members; other
+        // text takes the union's typed branch (schema matrix case typed_enum_union)
         assert_eq!(
             run(
                 serde_json::json!({"anyOf":[{"type":"string","enum":["auto"]},{"type":"integer"}]}),
                 "42"
             ),
-            serde_json::json!("42")
+            serde_json::json!(42)
         );
         // an enum that contradicts the declared type does not override it
         assert_eq!(
