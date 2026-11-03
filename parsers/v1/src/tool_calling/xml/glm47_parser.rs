@@ -536,6 +536,14 @@ fn coerce_value(raw: &str, schema_type: Option<&str>) -> ParsedValue {
     Value::String(raw.to_string()).into()
 }
 
+/// The type hint for an argument and the text to coerce: the raw text, or, for a
+/// quoted JSON string under a schema that admits no string but does admit the
+/// scalar type the quoted text parses as, the unquoted text.
+struct ArgumentHint<'a> {
+    schema_type: Option<&'static str>,
+    text: std::borrow::Cow<'a, str>,
+}
+
 /// Look up the JSON Schema type for a parameter by name from a tool's parameter schema.
 ///
 /// The parameter's schema is found through the root's composition keywords
@@ -544,21 +552,29 @@ fn coerce_value(raw: &str, schema_type: Option<&str>) -> ParsedValue {
 /// schema admits that type, the scalar wins over a bare `string` branch; a
 /// string `const`/`enum` member that equals the text keeps it as a string. A
 /// schema with no type information at all takes the type the text parses as.
-fn get_param_schema_type(
+fn resolve_argument<'a>(
     tools: Option<&[ToolDefinition]>,
     function_name: &str,
     param_name: &str,
-    raw: &str,
-) -> Option<&'static str> {
-    let tool = tools?.iter().find(|t| t.name == function_name)?;
-    let schema = tool.parameters.as_ref()?;
+    raw: &'a str,
+) -> ArgumentHint<'a> {
+    let verbatim = |schema_type| ArgumentHint {
+        schema_type,
+        text: std::borrow::Cow::Borrowed(raw),
+    };
+    let Some(schema) = tools
+        .and_then(|tools| tools.iter().find(|t| t.name == function_name))
+        .and_then(|tool| tool.parameters.as_ref())
+    else {
+        return verbatim(None);
+    };
     let mut found: Vec<&Value> = Vec::new();
     let mut remaining = MAX_PARAM_LOOKUP_NODES;
     find_param_schemas(schema, schema, param_name, 0, &mut remaining, &mut found);
     // Several branches may each declare the parameter: treat them as a union.
     let union: Value;
     let param: &Value = match found.as_slice() {
-        [] => return None,
+        [] => return verbatim(None),
         [single] => single,
         many => {
             union = serde_json::json!({
@@ -567,7 +583,19 @@ fn get_param_schema_type(
             &union
         }
     };
-    get_param_schema_type_for(schema, param, raw)
+    let schema_type = get_param_schema_type_for(schema, param, raw);
+    if raw.trim().starts_with('"')
+        && let Ok(Value::String(inner)) = serde_json::from_str::<Value>(raw.trim())
+        && schema_type_hint(schema, param, "string", raw) == Some(false)
+        && let Some(inner_type) = get_param_schema_type_for(schema, param, &inner)
+        && !matches!(inner_type, "string" | "array" | "object")
+    {
+        return ArgumentHint {
+            schema_type: Some(inner_type),
+            text: std::borrow::Cow::Owned(inner),
+        };
+    }
+    verbatim(schema_type)
 }
 
 const MAX_PARAM_LOOKUP_NODES: usize = 4096;
@@ -1108,6 +1136,25 @@ fn schema_type_match(
     hint
 }
 
+/// A top-level `required` key the model left out is present as JSON null when its
+/// schema admits null: the only value that satisfies such a schema without the key.
+fn fill_required_nullable(schema: &Value, arguments: &mut Vec<(String, ParsedValue)>) {
+    let Some(required) = schema.get("required").and_then(Value::as_array) else {
+        return;
+    };
+    for name in required.iter().filter_map(Value::as_str) {
+        if arguments.iter().any(|(key, _)| key == name) {
+            continue;
+        }
+        let mut found: Vec<&Value> = Vec::new();
+        let mut remaining = MAX_PARAM_LOOKUP_NODES;
+        find_param_schemas(schema, schema, name, 0, &mut remaining, &mut found);
+        if found.iter().any(|param| schema_permits_null(param, schema)) {
+            arguments.push((name.to_string(), Value::Null.into()));
+        }
+    }
+}
+
 /// Parse a single GLM-4.7 tool call block
 /// Format: <tool_call>function_name<arg_key>key1</arg_key><arg_value>value1</arg_value>...</tool_call>
 fn parse_tool_call_block(
@@ -1168,8 +1215,8 @@ fn parse_tool_call_block(
 
         if !key.is_empty() {
             // Look up the expected type from the tool's parameter schema
-            let schema_type = get_param_schema_type(tools, &function_name, key, raw_value);
-            let json_value = coerce_value(raw_value, schema_type);
+            let hint = resolve_argument(tools, &function_name, key, raw_value);
+            let json_value = coerce_value(&hint.text, hint.schema_type);
 
             match argument_indices.get(key).copied() {
                 Some(index) => arguments[index].1 = json_value,
@@ -1179,6 +1226,13 @@ fn parse_tool_call_block(
                 }
             }
         }
+    }
+
+    if let Some(schema) = tools
+        .and_then(|tools| tools.iter().find(|t| t.name == function_name))
+        .and_then(|tool| tool.parameters.as_ref())
+    {
+        fill_required_nullable(schema, &mut arguments);
     }
 
     // Preserve unknown calls; executors must authorize names against request-scoped tools.
@@ -1570,6 +1624,77 @@ mod tests {
         ]});
         assert_eq!(parse(either.clone(), "id", "7"), serde_json::json!(7));
         assert_eq!(parse(either, "id", "latest"), serde_json::json!("latest"));
+    }
+
+    #[test]
+    fn quoted_scalars_coerce_when_the_schema_admits_no_string() {
+        for parameter in [
+            serde_json::json!({"type": "number"}),
+            serde_json::json!({"anyOf": [{"type": "number"}, {"type": "null"}]}),
+            serde_json::json!({"type": ["number", "null"]}),
+        ] {
+            assert_eq!(
+                parse_schema_value(parameter.clone(), "\"50\""),
+                serde_json::json!(50),
+                "{parameter}"
+            );
+        }
+        assert_eq!(
+            parse_schema_value(serde_json::json!({"type": ["boolean", "null"]}), "\"true\""),
+            serde_json::json!(true)
+        );
+        // A schema that admits a string keeps the quoted text verbatim.
+        assert_eq!(
+            parse_schema_value(serde_json::json!({"type": "string"}), "\"50\""),
+            serde_json::json!("\"50\"")
+        );
+        assert_eq!(
+            parse_schema_value(
+                serde_json::json!({"anyOf": [{"type": "string"}, {"type": "number"}]}),
+                "\"50\""
+            ),
+            serde_json::json!("\"50\"")
+        );
+        // Quoted text that is not the admitted scalar stays as it was.
+        assert_eq!(
+            parse_schema_value(serde_json::json!({"type": "number"}), "\"fifty\""),
+            serde_json::json!("fifty")
+        );
+    }
+
+    #[test]
+    fn omitted_required_nullable_keys_are_filled_with_null() {
+        let tools = vec![ToolDefinition {
+            name: "read".into(),
+            parameters: Some(serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string"},
+                    "offset": {"anyOf": [{"type": "integer"}, {"type": "null"}]},
+                    "limit": {"type": ["integer", "null"]},
+                    "mode": {"type": "string"}
+                },
+                "required": ["path", "offset", "limit", "mode"],
+                "additionalProperties": false
+            })),
+            strict: None,
+        }];
+        let wire =
+            "<tool_call>read<arg_key>path</arg_key><arg_value>src/b.ts</arg_value></tool_call>";
+        let (calls, _) = try_tool_call_parse_glm47(wire, &get_test_config(), Some(&tools)).unwrap();
+        let arguments: Value = serde_json::from_str(&calls[0].function.arguments).unwrap();
+        // Nullable required keys are present as null; a required string stays absent.
+        assert_eq!(
+            arguments,
+            serde_json::json!({"path": "src/b.ts", "offset": null, "limit": null})
+        );
+        let wire = "<tool_call>read<arg_key>path</arg_key><arg_value>a</arg_value><arg_key>limit</arg_key><arg_value>5</arg_value></tool_call>";
+        let (calls, _) = try_tool_call_parse_glm47(wire, &get_test_config(), Some(&tools)).unwrap();
+        let arguments: Value = serde_json::from_str(&calls[0].function.arguments).unwrap();
+        assert_eq!(
+            arguments,
+            serde_json::json!({"path": "a", "limit": 5, "offset": null})
+        );
     }
 
     #[test]
