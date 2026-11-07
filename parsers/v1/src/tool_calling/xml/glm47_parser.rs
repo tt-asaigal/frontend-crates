@@ -151,6 +151,7 @@ pub fn try_tool_call_parse_glm47(
     tools: Option<&[ToolDefinition]>,
 ) -> anyhow::Result<(Vec<ToolCallResponse>, Option<String>)> {
     let (normal_text, tool_calls) = extract_tool_calls(message, config, tools)?;
+    let tool_calls = drop_calls_to_unknown_tools(tool_calls, tools);
 
     let normal_content = if normal_text.is_empty() {
         Some("".to_string())
@@ -159,6 +160,46 @@ pub fn try_tool_call_parse_glm47(
     };
 
     Ok((tool_calls, normal_content))
+}
+
+/// Drop calls to functions the request did not offer, as vLLM's GLM-4.7 parser does
+/// (`validate_tool_names=True`). A client cannot execute such a call, and OpenRouter scores
+/// each one as "Unknown Name". Applies only when the request carries a non-empty tools list;
+/// requests without tools keep every parsed call. This is the single entry point for both
+/// the non-streaming path and the streaming jail, so both drop the same calls.
+///
+/// Logs the dropped name's length only, never the name: tool names are client data.
+fn drop_calls_to_unknown_tools(
+    calls: Vec<ToolCallResponse>,
+    tools: Option<&[ToolDefinition]>,
+) -> Vec<ToolCallResponse> {
+    let Some(tools_list) = tools.filter(|t| !t.is_empty()) else {
+        return calls;
+    };
+    let total = calls.len();
+    let kept: Vec<ToolCallResponse> = calls
+        .into_iter()
+        .filter(|call| {
+            let known = tools_list.iter().any(|t| t.name == call.function.name);
+            if !known {
+                warn!(
+                    function_bytes = call.function.name.len(),
+                    why = "tool_not_in_request_tool_list",
+                    "GLM-4.7 tool call references a function not in the request's tools list; dropping it"
+                );
+            }
+            known
+        })
+        .collect();
+    if kept.len() < total {
+        warn!(
+            dropped_calls = total - kept.len(),
+            kept_calls = kept.len(),
+            why = "tool_not_in_request_tool_list",
+            "GLM-4.7 parser dropped tool calls to functions not in the request's tools list"
+        );
+    }
+    kept
 }
 
 /// Extract tool calls and normal text from message.
@@ -1235,16 +1276,8 @@ fn parse_tool_call_block(
         fill_required_nullable(schema, &mut arguments);
     }
 
-    // Preserve unknown calls; executors must authorize names against request-scoped tools.
-    if let Some(tools_list) = tools
-        && !tools_list.iter().any(|t| t.name == function_name)
-    {
-        warn!(
-            function = %function_name,
-            why = "tool_not_in_request_tool_list",
-            "GLM-4.7 tool call references a function not in the request's tools list; passing it through"
-        );
-    }
+    // Calls to functions outside the request's tools list are dropped by the caller,
+    // try_tool_call_parse_glm47 (see drop_calls_to_unknown_tools).
 
     Ok(ToolCallResponse {
         id: Uuid::new_v4().to_string(),
@@ -2181,6 +2214,105 @@ mod tests {
         }
     }
 
+    fn named_tools(names: &[&str]) -> Vec<ToolDefinition> {
+        names
+            .iter()
+            .map(|name| ToolDefinition {
+                name: (*name).into(),
+                parameters: Some(serde_json::json!({
+                    "type": "object", "properties": {"command": {"type": "string"}}
+                })),
+                strict: None,
+            })
+            .collect()
+    }
+
+    fn call_wire(name: &str) -> String {
+        format!("<tool_call>{name}<arg_key>command</arg_key><arg_value>ls</arg_value></tool_call>")
+    }
+
+    #[test]
+    fn unknown_tool_calls_are_dropped() {
+        // History used `Bash`; this request offers only `mcp__repo__bash`.
+        let tools = named_tools(&["mcp__repo__bash"]);
+        let wire = format!("Running it now.{}", call_wire("Bash"));
+        let (calls, normal) =
+            try_tool_call_parse_glm47(&wire, &get_test_config(), Some(&tools)).unwrap();
+        assert!(
+            calls.is_empty(),
+            "call to an unoffered tool must not be returned"
+        );
+        assert_eq!(normal.as_deref(), Some("Running it now."));
+    }
+
+    #[test]
+    fn known_tool_calls_survive_next_to_unknown_ones() {
+        let tools = named_tools(&["read", "write"]);
+        let wire = format!(
+            "{}{}{}",
+            call_wire("read"),
+            call_wire("Bash"),
+            call_wire("write")
+        );
+        let (calls, _) =
+            try_tool_call_parse_glm47(&wire, &get_test_config(), Some(&tools)).unwrap();
+        let names: Vec<&str> = calls.iter().map(|c| c.function.name.as_str()).collect();
+        assert_eq!(names, ["read", "write"], "known calls keep their order");
+    }
+
+    #[test]
+    fn calls_are_kept_when_the_request_has_no_tools_list() {
+        let wire = call_wire("Bash");
+        for tools in [None, Some(&[][..])] {
+            let (calls, _) = try_tool_call_parse_glm47(&wire, &get_test_config(), tools).unwrap();
+            assert_eq!(
+                calls.len(),
+                1,
+                "no tools list means nothing to validate against"
+            );
+            assert_eq!(calls[0].function.name, "Bash");
+        }
+    }
+
+    #[test]
+    fn tool_names_match_exactly() {
+        let tools = named_tools(&["bash"]);
+        for name in ["Bash", "bash ", "mcp__repo__bash"] {
+            let (calls, _) =
+                try_tool_call_parse_glm47(&call_wire(name), &get_test_config(), Some(&tools))
+                    .unwrap();
+            // The parser trims the name, so "bash " is the offered tool.
+            let expected = usize::from(name.trim() == "bash");
+            assert_eq!(calls.len(), expected, "name {name:?}");
+        }
+    }
+
+    #[test]
+    fn runaway_unknown_calls_are_all_dropped() {
+        let tools = named_tools(&["read"]);
+        let wire = call_wire("submit").repeat(300);
+        let (calls, normal) =
+            try_tool_call_parse_glm47(&wire, &get_test_config(), Some(&tools)).unwrap();
+        assert!(calls.is_empty());
+        assert_eq!(
+            normal.as_deref(),
+            Some(""),
+            "no wire tags leak into content"
+        );
+    }
+
+    #[test]
+    fn unknown_calls_recovered_from_bare_bodies_are_dropped() {
+        // Model omitted the <tool_call> opener; the bare-body recovery path still applies.
+        let tools = named_tools(&["read"]);
+        let wire =
+            "Let me check. Bash<arg_key>command</arg_key><arg_value>ls</arg_value></tool_call>";
+        let (calls, normal) =
+            try_tool_call_parse_glm47(wire, &get_test_config(), Some(&tools)).unwrap();
+        assert!(calls.is_empty());
+        assert_eq!(normal.as_deref(), Some("Let me check. "));
+    }
+
     #[test] // helper
     fn test_detect_tool_call_start() {
         let config = get_test_config();
@@ -2474,7 +2606,7 @@ mod tests {
 
     // Fixture coverage: glm47/TOOLCALLING.batch.yaml (TOOLCALLING.batch.13).
     #[test]
-    fn test_unknown_function_block_returned_as_call_no_tag_leak() {
+    fn test_unknown_function_block_dropped_no_tag_leak() {
         let config = get_test_config();
         let tools = vec![ToolDefinition {
             name: "get_weather".to_string(),
@@ -2486,10 +2618,7 @@ mod tests {
         let (calls, normal_text) =
             try_tool_call_parse_glm47(message, &config, Some(&tools)).unwrap();
 
-        assert_eq!(calls.len(), 1);
-        assert_eq!(calls[0].function.name, "unknown_func");
-        let args: Value = serde_json::from_str(&calls[0].function.arguments).unwrap();
-        assert_eq!(args, serde_json::json!({"x": "1"}));
+        assert!(calls.is_empty(), "calls to unoffered tools are dropped");
         let text = normal_text.unwrap();
         assert!(
             !text.contains("<tool_call>") && !text.contains("<arg_key>"),
@@ -2502,7 +2631,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_public_dispatch_preserves_mixed_unknown_and_known_calls() {
+    async fn test_public_dispatch_drops_unknown_and_keeps_known_calls() {
         let tools = vec![ToolDefinition {
             name: "known_func".to_string(),
             parameters: Some(serde_json::json!({
@@ -2521,12 +2650,9 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(calls.len(), 2);
-        assert_eq!(calls[0].function.name, "unknown_func");
-        assert_eq!(calls[1].function.name, "known_func");
-        let unknown_args: Value = serde_json::from_str(&calls[0].function.arguments).unwrap();
-        let known_args: Value = serde_json::from_str(&calls[1].function.arguments).unwrap();
-        assert_eq!(unknown_args, serde_json::json!({"x": "1"}));
+        assert_eq!(calls.len(), 1);
+        assert_eq!(calls[0].function.name, "known_func");
+        let known_args: Value = serde_json::from_str(&calls[0].function.arguments).unwrap();
         assert_eq!(known_args, serde_json::json!({"x": 2}));
         assert!(normal_text.unwrap_or_default().trim().is_empty());
     }
