@@ -5994,6 +5994,89 @@ fahrenheit
         );
     }
 
+    /// A streamed call to a tool the request did not offer is dropped: no tool_call delta
+    /// carries its name, and neither the name nor the wire markup leaks into content.
+    /// Calls to offered tools in the same stream still come through.
+    #[tokio::test]
+    async fn test_glm47_stream_drops_calls_to_unoffered_tools() {
+        use dynamo_parsers::tool_calling::ToolDefinition;
+
+        let tool_defs = vec![ToolDefinition {
+            name: "mcp__repo__bash".to_string(),
+            parameters: Some(serde_json::json!({
+                "type": "object",
+                "properties": {"command": {"type": "string"}},
+            })),
+            strict: None,
+        }];
+
+        let input_chunks = vec![
+            test_utils::create_mock_response_chunk("Running it. <tool_call>Ba".to_string(), 0),
+            test_utils::create_mock_response_chunk(
+                "sh<arg_key>command</arg_key><arg_value>ls</arg_value></tool_call>".to_string(),
+                0,
+            ),
+            test_utils::create_mock_response_chunk(
+                "<tool_call>mcp__repo__bash<arg_key>command</arg_key><arg_value>pwd</arg_value></tool_call>"
+                    .to_string(),
+                0,
+            ),
+        ];
+
+        let jail = JailedStream::builder()
+            .tool_call_parser("glm47")
+            .tool_definitions(tool_defs)
+            .build();
+        let results: Vec<_> = jail
+            .apply_with_finish_reason(stream::iter(input_chunks))
+            .collect()
+            .await;
+
+        assert_eq!(
+            tool_call_names(&results),
+            vec!["mcp__repo__bash".to_string()]
+        );
+        assert_eq!(test_utils::reconstruct_content(&results), "Running it. ");
+        assert_content_omits_markers(
+            "GLM-4.7 unoffered tool",
+            &results,
+            &["Bash", "<tool_call>", "<arg_key>", "</tool_call>"],
+        );
+    }
+
+    /// A stream whose only calls target unoffered tools yields no tool calls at all.
+    #[tokio::test]
+    async fn test_glm47_stream_with_only_unoffered_calls_yields_no_tool_calls() {
+        use dynamo_parsers::tool_calling::ToolDefinition;
+
+        let tool_defs = vec![ToolDefinition {
+            name: "read".to_string(),
+            parameters: None,
+            strict: None,
+        }];
+        let call = "<tool_call>submit<arg_key>x</arg_key><arg_value>1</arg_value></tool_call>";
+        let input_chunks = vec![
+            test_utils::create_mock_response_chunk(call.repeat(3), 0),
+            test_utils::create_mock_response_chunk(call.repeat(3), 0),
+        ];
+
+        let jail = JailedStream::builder()
+            .tool_call_parser("glm47")
+            .tool_definitions(tool_defs)
+            .build();
+        let results: Vec<_> = jail
+            .apply_with_finish_reason(stream::iter(input_chunks))
+            .collect()
+            .await;
+
+        assert!(tool_call_names(&results).is_empty());
+        assert_content_omits_markers(
+            "GLM-4.7 only unoffered",
+            &results,
+            &["submit", "<tool_call>", "</tool_call>"],
+        );
+    }
+
     #[tokio::test]
     async fn test_glm47_trailing_split_bare_call_stays_jailed() {
         use dynamo_parsers::tool_calling::ToolDefinition;
