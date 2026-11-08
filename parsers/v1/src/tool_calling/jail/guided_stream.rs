@@ -58,9 +58,10 @@ pub(crate) struct GuidedDelta {
     pub arguments: String,
 }
 
-/// One call whose opening delta has already reached the client.
+/// One call committed by the cursor. The jail may still filter it by name.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct StreamedCall {
+    pub name: String,
     /// Argument bytes released so far, in their original wire representation.
     pub arguments: String,
 }
@@ -440,6 +441,7 @@ impl GuidedStreamCursor {
         self.streamed.insert(
             self.index,
             StreamedCall {
+                name: name.clone(),
                 arguments: String::new(),
             },
         );
