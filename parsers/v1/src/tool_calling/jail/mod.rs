@@ -957,7 +957,7 @@ impl ChoiceJailState {
 
         self.feed_entries(logprobs);
 
-        match jail_stream.marker_matcher.process_chunk(content, "") {
+        match jail_stream.match_content(content, "") {
             MatchResult::Partial {
                 prefix, partial, ..
             } => {
@@ -1060,6 +1060,7 @@ impl ChoiceJailState {
     fn emit_guided_progress(
         &mut self,
         choice: &ChatChoiceStream,
+        jail_stream: &JailedStream,
         emissions: &mut Vec<ChoiceEmission>,
     ) {
         let Some(cursor) = self.guided_cursor.as_mut() else {
@@ -1067,6 +1068,14 @@ impl ChoiceJailState {
         };
         let mut deltas: Vec<GuidedDelta> = Vec::new();
         cursor.advance(&self.accumulated_content, &mut deltas);
+        // Validate the opening delta AND every subsequent argument fragment.
+        // Keep the cursor's source indices for completion/EOF reconciliation.
+        deltas.retain(|delta| {
+            cursor
+                .streamed()
+                .get(&delta.tool_index)
+                .is_some_and(|call| jail_stream.allows_tool_name(&call.name))
+        });
         if deltas.is_empty() {
             return;
         }
@@ -1256,9 +1265,7 @@ impl ChoiceJailState {
         let mut emissions = Vec::new();
         if !self.is_jailed {
             // Use the marker matcher to detect complete/partial markers
-            let match_result = jail_stream
-                .marker_matcher
-                .process_chunk(content, &self.partial_match_buffer);
+            let match_result = jail_stream.match_content(content, &self.partial_match_buffer);
 
             let unresolved_marker = !self.held_after_contentless.is_empty()
                 && matches!(&match_result, MatchResult::Partial { prefix, partial, .. }
@@ -1425,7 +1432,7 @@ impl ChoiceJailState {
             // Under a guided grammar the payload's shape is already fixed, so release
             // whatever the cursor can commit to BEFORE the completion check. Holding a
             // call until the closing brace is the latency defect this exists to fix.
-            self.emit_guided_progress(choice, &mut emissions);
+            self.emit_guided_progress(choice, jail_stream, &mut emissions);
 
             let completion = jail_stream
                 .check_jail_completion(&self.accumulated_content, &mut self.completion_progress)
@@ -1754,6 +1761,85 @@ impl JailedStream {
     /// Create a new builder for configuring a JailedStream
     pub fn builder() -> JailedStreamBuilder {
         JailedStreamBuilder::new()
+    }
+
+    /// Guided JSON bypasses the native GLM parser, so apply its name policy here too.
+    fn allows_tool_name(&self, name: &str) -> bool {
+        self.tool_call_parser.as_deref() != Some("glm47")
+            || self
+                .tool_definitions
+                .as_deref()
+                .is_none_or(|tools| tools.is_empty() || tools.iter().any(|tool| tool.name == name))
+    }
+
+    fn contains_glm47_markup(&self, content: &str) -> bool {
+        self.tool_call_parser.as_deref() == Some("glm47")
+            && (content.contains("<tool_call>") || content.contains("<arg_key>"))
+    }
+
+    fn match_content(&self, content: &str, partial: &str) -> MatchResult {
+        let matched = self.marker_matcher.process_chunk(content, partial);
+        if self.tool_call_parser.as_deref() != Some("glm47")
+            || self.tool_definitions.as_ref().is_none_or(Vec::is_empty)
+        {
+            return matched;
+        }
+
+        // A bare call's name precedes <arg_key>. Hold the entire candidate token,
+        // including names not offered by the request, until the marker resolves.
+        // Matching only offered names could turn `namespace__read` into `read`.
+        let take_candidate = |prefix: &mut String| {
+            let end = prefix.trim_end().len();
+            let start = prefix[..end]
+                .char_indices()
+                .rev()
+                .find(|(_, ch)| !(ch.is_ascii_alphanumeric() || matches!(ch, '_' | '-' | '.')))
+                .map_or(0, |(index, ch)| index + ch.len_utf8());
+            prefix.split_off(start)
+        };
+        match matched {
+            MatchResult::Complete {
+                mut prefix,
+                marker,
+                marker_start,
+                suffix,
+            } if marker == "<arg_key>" => {
+                let candidate = take_candidate(&mut prefix);
+                MatchResult::Complete {
+                    prefix,
+                    marker_start: marker_start - candidate.len(),
+                    marker: candidate + &marker,
+                    suffix,
+                }
+            }
+            MatchResult::Partial {
+                mut prefix,
+                partial,
+                possible_patterns,
+            } => {
+                let candidate = take_candidate(&mut prefix);
+                MatchResult::Partial {
+                    prefix,
+                    partial: candidate + &partial,
+                    possible_patterns,
+                }
+            }
+            MatchResult::None {
+                content: mut prefix,
+            } => {
+                let partial = take_candidate(&mut prefix);
+                if partial.is_empty() {
+                    MatchResult::None { content: prefix }
+                } else {
+                    MatchResult::Partial {
+                        prefix,
+                        partial,
+                        possible_patterns: Vec::new(),
+                    }
+                }
+            }
+            other => other,
+        }
     }
 
     /// Whether the jail starts already-jailed (tool_choice=required/named path).
@@ -2545,6 +2631,11 @@ impl JailedStream {
                                 .to_string()
                         } else if normal_text.as_deref() == Some("") {
                             String::new()
+                        } else if self.contains_glm47_markup(accumulated_content) {
+                            // A successful parse can return zero calls after filtering.
+                            // Its retained prose is authoritative; raw text still has
+                            // the rejected call, including on bare-body EOF recovery.
+                            normal_text.unwrap_or_default()
                         } else if is_kimi_k3_parser(self.tool_call_parser.as_deref()) {
                             // K3's parser owns both response and tools
                             // channels. Its stripped response text is therefore
@@ -2631,6 +2722,7 @@ impl JailedStream {
                 //     the configured tool_call_parser recovers the call.
                 let mut tool_call_chunks: Vec<ChatCompletionMessageToolCallChunk> = Vec::new();
                 let mut preserve_source_indices = false;
+                let mut native_content = None;
 
                 // 1. Required-choice extraction preserves each array element's
                 //    SOURCE index so it stays in the cursor's sparse index space.
@@ -2686,13 +2778,16 @@ impl JailedStream {
                 //    guided decoding and emitted the model's native format.
                 if tool_call_chunks.is_empty()
                     && self.tool_call_parser.is_some()
-                    && let Ok((tool_calls, _)) = try_tool_call_parse_aggregate(
+                    && let Ok((tool_calls, normal_text)) = try_tool_call_parse_aggregate(
                         accumulated_content,
                         self.tool_call_parser.as_deref(),
                         self.tool_definitions.as_deref(),
                     )
                     .await
                 {
+                    if self.contains_glm47_markup(accumulated_content) {
+                        native_content = normal_text;
+                    }
                     tool_call_chunks.extend(tool_calls.into_iter().enumerate().map(|(idx, tc)| {
                         ChatCompletionMessageToolCallChunk {
                             index: idx as u32,
@@ -2710,7 +2805,14 @@ impl JailedStream {
                 // Track whether the filter drained a non-empty list so we can
                 // suppress the content fallback below — otherwise the raw
                 // wrong-tool JSON would leak to the client as assistant text.
-                let mut filter_dropped_all = false;
+                let pre_filter_len = tool_call_chunks.len();
+                tool_call_chunks.retain(|tc| {
+                    tc.function
+                        .as_ref()
+                        .and_then(|f| f.name.as_deref())
+                        .is_some_and(|name| self.allows_tool_name(name))
+                });
+                let mut filter_dropped_all = pre_filter_len > 0 && tool_call_chunks.is_empty();
                 if let Some(ref required_name) = self.named_tool_name {
                     let pre_filter_len = tool_call_chunks.len();
                     tool_call_chunks.retain(|tc| {
@@ -2749,13 +2851,19 @@ impl JailedStream {
                         base_choice.finish_reason,
                         base_choice.logprobs.clone(),
                     )
-                } else if filter_dropped_all {
-                    // Named filter rejected every parsed call — do not leak
-                    // the wrong-tool JSON back as content.
+                } else if filter_dropped_all
+                    || native_content.is_some()
+                    || (self.tool_call_parser.as_deref() == Some("glm47")
+                        && accumulated_content.trim_start().starts_with(['[', '{']))
+                {
+                    // A successful parse/filter is not a parse failure. Preserve
+                    // native prose and never fall back to rejected tool markup/JSON.
+                    // Incomplete guided JSON is protocol data too, even with the
+                    // incremental cursor disabled by the serving-layer rollback.
                     create_choice_stream(
                         choice_index,
                         Some(Role::Assistant),
-                        "",
+                        native_content.as_deref().unwrap_or(""),
                         None,
                         base_choice.finish_reason,
                         base_choice.logprobs.clone(),
@@ -3185,12 +3293,10 @@ impl JailedStreamBuilder {
                 }
                 if let ParserConfig::Glm47(glm_config) = &config.parser_config
                     && let Some(tools) = self.tool_definitions.as_ref()
+                    && !tools.is_empty()
                 {
-                    for tool in tools {
-                        if !tool.name.is_empty() {
-                            all_patterns.push(format!("{}{}", tool.name, glm_config.arg_key_start));
-                        }
-                    }
+                    // match_content keeps the full candidate name before this marker.
+                    all_patterns.push(glm_config.arg_key_start.clone());
                 }
             }
         }
