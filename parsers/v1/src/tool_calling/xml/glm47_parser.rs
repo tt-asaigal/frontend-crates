@@ -17,29 +17,6 @@ use super::OrderedArguments;
 use super::parsed_value::{ParsedValue, coerce_integer_literal};
 use super::response::{CalledFunction, ToolCallResponse, ToolCallType};
 
-/// Render a tool_call block snippet for logs. Bounded so a huge truncated
-/// argument body doesn't blow up the log line; control chars are escaped
-/// because raw newlines/tabs make the warning unreadable in grep/jq.
-fn truncate_for_log(s: &str) -> String {
-    const MAX: usize = 200;
-    let mut out = String::with_capacity(MAX.min(s.len()) + 16);
-    let mut bytes = 0usize;
-    for ch in s.chars() {
-        if bytes >= MAX {
-            out.push('…');
-            break;
-        }
-        match ch {
-            '\n' => out.push_str("\\n"),
-            '\r' => out.push_str("\\r"),
-            '\t' => out.push_str("\\t"),
-            c => out.push(c),
-        }
-        bytes += ch.len_utf8();
-    }
-    out
-}
-
 /// Check if a chunk contains the start of a GLM-4.7 tool call.
 /// Format: <tool_call>function_name<arg_key>...</arg_key><arg_value>...</arg_value></tool_call>
 pub fn detect_tool_call_start_glm47(chunk: &str, config: &Glm47ParserConfig) -> bool {
@@ -165,41 +142,36 @@ pub fn try_tool_call_parse_glm47(
 /// Drop calls to functions the request did not offer, as vLLM's GLM-4.7 parser does
 /// (`validate_tool_names=True`). A client cannot execute such a call, and OpenRouter scores
 /// each one as "Unknown Name". Applies only when the request carries a non-empty tools list;
-/// requests without tools keep every parsed call. This is the single entry point for both
-/// the non-streaming path and the streaming jail, so both drop the same calls.
+/// requests without tools keep every parsed call. Native batch and jail parsing both
+/// use this entry point; the jail also validates its separate guided-JSON path.
 ///
 /// Logs the dropped name's length only, never the name: tool names are client data.
 fn drop_calls_to_unknown_tools(
-    calls: Vec<ToolCallResponse>,
+    mut calls: Vec<ToolCallResponse>,
     tools: Option<&[ToolDefinition]>,
 ) -> Vec<ToolCallResponse> {
     let Some(tools_list) = tools.filter(|t| !t.is_empty()) else {
         return calls;
     };
     let total = calls.len();
-    let kept: Vec<ToolCallResponse> = calls
-        .into_iter()
-        .filter(|call| {
-            let known = tools_list.iter().any(|t| t.name == call.function.name);
-            if !known {
-                warn!(
-                    function_bytes = call.function.name.len(),
-                    why = "tool_not_in_request_tool_list",
-                    "GLM-4.7 tool call references a function not in the request's tools list; dropping it"
-                );
-            }
-            known
-        })
-        .collect();
-    if kept.len() < total {
+    let mut max_function_bytes = 0;
+    calls.retain(|call| {
+        let known = tools_list.iter().any(|t| t.name == call.function.name);
+        if !known {
+            max_function_bytes = max_function_bytes.max(call.function.name.len());
+        }
+        known
+    });
+    if calls.len() < total {
         warn!(
-            dropped_calls = total - kept.len(),
-            kept_calls = kept.len(),
+            dropped_calls = total - calls.len(),
+            kept_calls = calls.len(),
+            max_function_bytes,
             why = "tool_not_in_request_tool_list",
             "GLM-4.7 parser dropped tool calls to functions not in the request's tools list"
         );
     }
-    kept
+    calls
 }
 
 /// Extract tool calls and normal text from message.
@@ -234,7 +206,7 @@ fn extract_tool_calls(
         }
         warn!(
             why = "GLM-4.7 tool-call marker found without <tool_call> start; dropping orphan marker tail so wire tags do not leak into normal_text",
-            dropped_block = %truncate_for_log(&text[marker_idx..]),
+            dropped_bytes = text.len() - marker_idx,
             "GLM-4.7 parser dropping orphan tool-call marker tail"
         );
         return Ok((orphan_glm47_prefix(text, marker_idx), calls));
@@ -284,7 +256,7 @@ fn extract_tool_calls(
                                    as a GLM-4.7 tool call (e.g. empty function name, \
                                    missing <arg_key>, malformed args); dropping to avoid \
                                    leaking wire tags through normal_text",
-                            dropped_block = %truncate_for_log(block),
+                            dropped_bytes = block.len(),
                             "GLM-4.7 parser dropping unparseable tool_call block"
                         );
                     }
@@ -313,7 +285,7 @@ fn extract_tool_calls(
                                        but parse_tool_call_block failed on the truncated \
                                        tail; dropping to avoid leaking wire tags through \
                                        normal_text",
-                                dropped_block = %truncate_for_log(block),
+                                dropped_bytes = block.len(),
                                 "GLM-4.7 parser dropping truncated tool_call block (recovery attempt failed)"
                             );
                         }
@@ -331,7 +303,7 @@ fn extract_tool_calls(
                     };
                     warn!(
                         why = %reason,
-                        dropped_block = %truncate_for_log(block),
+                        dropped_bytes = block.len(),
                         "GLM-4.7 parser dropping truncated tool_call block (no end fence)"
                     );
                 }
@@ -475,7 +447,7 @@ fn recover_bare_glm47_calls(
         if is_glm47_close_marker_spam(&text[cursor..], config) {
             warn!(
                 why = "orphan_close_marker_spam",
-                dropped_block = %truncate_for_log(&text[cursor..]),
+                dropped_bytes = text.len() - cursor,
                 "GLM-4.7 parser dropping orphan close-marker spam after recovered bare call"
             );
             break;
