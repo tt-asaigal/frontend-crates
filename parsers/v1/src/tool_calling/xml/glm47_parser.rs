@@ -488,7 +488,7 @@ fn consume_glm47_close_markers(text: &str, mut cursor: usize, config: &Glm47Pars
 
 /// Coerce a raw string value using the tool's parameter schema.
 /// Falls back to string if no schema is available or the type is unrecognized.
-fn coerce_value(raw: &str, schema_type: Option<&str>) -> ParsedValue {
+pub(crate) fn coerce_value(raw: &str, schema_type: Option<&str>) -> ParsedValue {
     let trimmed = raw.trim();
 
     // A `string` parameter is delivered verbatim: the model's text may
@@ -552,9 +552,9 @@ fn coerce_value(raw: &str, schema_type: Option<&str>) -> ParsedValue {
 /// The type hint for an argument and the text to coerce: the raw text, or, for a
 /// quoted JSON string under a schema that admits no string but does admit the
 /// scalar type the quoted text parses as, the unquoted text.
-struct ArgumentHint<'a> {
-    schema_type: Option<&'static str>,
-    text: std::borrow::Cow<'a, str>,
+pub(crate) struct ArgumentHint<'a> {
+    pub(crate) schema_type: Option<&'static str>,
+    pub(crate) text: std::borrow::Cow<'a, str>,
 }
 
 /// Look up the JSON Schema type for a parameter by name from a tool's parameter schema.
@@ -565,7 +565,7 @@ struct ArgumentHint<'a> {
 /// schema admits that type, the scalar wins over a bare `string` branch; a
 /// string `const`/`enum` member that equals the text keeps it as a string. A
 /// schema with no type information at all takes the type the text parses as.
-fn resolve_argument<'a>(
+pub(crate) fn resolve_argument<'a>(
     tools: Option<&[ToolDefinition]>,
     function_name: &str,
     param_name: &str,
@@ -1151,7 +1151,7 @@ fn schema_type_match(
 
 /// A top-level `required` key the model left out is present as JSON null when its
 /// schema admits null: the only value that satisfies such a schema without the key.
-fn fill_required_nullable(schema: &Value, arguments: &mut Vec<(String, ParsedValue)>) {
+pub(crate) fn fill_required_nullable(schema: &Value, arguments: &mut Vec<(String, ParsedValue)>) {
     let Some(required) = schema.get("required").and_then(Value::as_array) else {
         return;
     };

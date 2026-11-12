@@ -19,12 +19,17 @@
 
 use std::borrow::Cow;
 
+use serde::de::{Deserialize, Deserializer, MapAccess, Visitor};
 use serde_json::Value;
+use serde_json::value::RawValue;
 use uuid::Uuid;
 
 use super::super::ToolDefinition;
 use super::super::config::{KimiK3ParserConfig, TerminalMarkerPolicy};
 use super::super::response::{CalledFunction, ToolCallResponse, ToolCallType};
+use super::super::xml::{
+    OrderedArguments, ParsedValue, coerce_value, fill_required_nullable, resolve_argument,
+};
 
 pub(crate) const SEP: &str = "<|sep|>";
 
@@ -175,14 +180,93 @@ pub fn find_tool_call_end_position_kimi_k3(
 pub fn try_tool_call_parse_kimi_k3(
     message: &str,
     config: &KimiK3ParserConfig,
-    _tools: Option<&[ToolDefinition]>,
+    tools: Option<&[ToolDefinition]>,
 ) -> anyhow::Result<(Vec<ToolCallResponse>, Option<String>)> {
     let normalized = normalize_spaced_markers(message);
     let sanitized = strip_orphan_think_close(normalized.as_ref());
     let message = sanitized.as_ref();
     let normal_text = extract_response_text(message);
-    let calls = extract_calls(message, config);
+    let mut calls = extract_calls(message, config);
+    for call in &mut calls {
+        apply_schema_rules(call, tools);
+    }
     Ok((calls, Some(normal_text)))
+}
+
+/// The GLM-4.7 parser's two schema rules, applied to a call's JSON arguments: a
+/// quoted scalar under a schema that admits no string but does admit the scalar
+/// type it parses as becomes that scalar, and a top-level `required` key the model
+/// left out is present as null when its schema admits null. The arguments are
+/// rewritten only when one of the rules applies.
+fn apply_schema_rules(call: &mut ToolCallResponse, tools: Option<&[ToolDefinition]>) {
+    let name = call.function.name.as_str();
+    let Some(schema) = tools
+        .and_then(|tools| tools.iter().find(|t| t.name == name))
+        .and_then(|tool| tool.parameters.as_ref())
+    else {
+        return;
+    };
+    let parsed = serde_json::from_str::<RawObjectEntries>(&call.function.arguments);
+    let Ok(RawObjectEntries(entries)) = parsed else {
+        return;
+    };
+
+    let mut coerced_any = false;
+    let mut arguments: Vec<(String, ParsedValue)> = Vec::with_capacity(entries.len());
+    for (key, raw) in entries {
+        // `resolve_argument` returns owned text only when the quoted-scalar rule applies.
+        let coerced = {
+            let hint = resolve_argument(tools, name, &key, raw.get());
+            match hint.text {
+                Cow::Owned(text) => Some(coerce_value(&text, hint.schema_type)),
+                Cow::Borrowed(_) => None,
+            }
+        };
+        let value = match coerced {
+            Some(value) => {
+                coerced_any = true;
+                value
+            }
+            // Serialized as its raw text, so an untouched value keeps its bytes.
+            None => ParsedValue::RawNumber(raw),
+        };
+        arguments.push((key, value));
+    }
+    let given = arguments.len();
+    fill_required_nullable(schema, &mut arguments);
+    if !coerced_any && arguments.len() == given {
+        return;
+    }
+    if let Ok(rewritten) = serde_json::to_string(&OrderedArguments(&arguments)) {
+        call.function.arguments = rewritten;
+    }
+}
+
+/// A JSON object's top-level entries in their written order, each value as raw text.
+struct RawObjectEntries(Vec<(String, Box<RawValue>)>);
+
+impl<'de> Deserialize<'de> for RawObjectEntries {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        struct EntriesVisitor;
+
+        impl<'de> Visitor<'de> for EntriesVisitor {
+            type Value = RawObjectEntries;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("a JSON object")
+            }
+
+            fn visit_map<A: MapAccess<'de>>(self, mut map: A) -> Result<Self::Value, A::Error> {
+                let mut entries = Vec::new();
+                while let Some(entry) = map.next_entry::<String, Box<RawValue>>()? {
+                    entries.push(entry);
+                }
+                Ok(RawObjectEntries(entries))
+            }
+        }
+
+        deserializer.deserialize_map(EntriesVisitor)
+    }
 }
 
 fn strip_orphan_think_close(message: &str) -> Cow<'_, str> {
@@ -780,6 +864,111 @@ mod tests {
 
         assert_eq!(calls.len(), 1);
         assert_eq!(calls[0].function.name, "unknown");
+    }
+
+    fn parse_with_tools(input: &str, defined: &[ToolDefinition]) -> Vec<ToolCallResponse> {
+        try_tool_call_parse_kimi_k3(input, &KimiK3ParserConfig::default(), Some(defined))
+            .unwrap()
+            .0
+    }
+
+    #[test]
+    fn quoted_scalars_coerce_when_the_schema_admits_no_string() {
+        let defined = [ToolDefinition {
+            name: "probe".to_string(),
+            parameters: Some(serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "count": {"type": "integer"},
+                    "limit": {"type": "integer"},
+                    "ratio": {"anyOf": [{"type": "number"}, {"type": "null"}]},
+                    "size": {"type": ["number", "null"]},
+                    "flag": {"type": ["boolean", "null"]},
+                    "label": {"type": "string"},
+                    "either": {"anyOf": [{"type": "string"}, {"type": "number"}]},
+                    "word": {"type": "number"}
+                }
+            })),
+            strict: None,
+        }];
+        let body = [
+            arg("count", Some("string"), "50"),
+            arg("limit", Some("integer"), "\"50\""),
+            arg("ratio", Some("string"), "50"),
+            arg("size", Some("string"), "50"),
+            arg("flag", Some("string"), "true"),
+            // A schema that admits a string keeps the string.
+            arg("label", Some("string"), "50"),
+            arg("either", Some("string"), "50"),
+            // Quoted text that is not the admitted scalar stays as it was.
+            arg("word", Some("string"), "fifty"),
+        ]
+        .concat();
+        let input = tools(&call("tool=\"probe\" index=\"1\"", &body));
+        let calls = parse_with_tools(&input, &defined);
+
+        assert_eq!(
+            calls[0].function.arguments,
+            r#"{"count":50,"limit":50,"ratio":50,"size":50,"flag":true,"label":"50","either":"50","word":"fifty"}"#
+        );
+    }
+
+    #[test]
+    fn omitted_required_nullable_keys_are_filled_with_null() {
+        let defined = [ToolDefinition {
+            name: "read".to_string(),
+            parameters: Some(serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string"},
+                    "offset": {"anyOf": [{"type": "integer"}, {"type": "null"}]},
+                    "limit": {"type": ["integer", "null"]},
+                    "mode": {"type": "string"}
+                },
+                "required": ["path", "offset", "limit", "mode"],
+                "additionalProperties": false
+            })),
+            strict: None,
+        }];
+        let body = arg("path", Some("string"), "src/b.ts");
+        let input = tools(&call("tool=\"read\" index=\"1\"", &body));
+        let calls = parse_with_tools(&input, &defined);
+        // Nullable required keys are present as null; a required string stays absent.
+        assert_eq!(
+            calls[0].function.arguments,
+            r#"{"path":"src/b.ts","offset":null,"limit":null}"#
+        );
+
+        let body = [
+            arg("path", Some("string"), "a"),
+            arg("limit", Some("number"), "5"),
+        ]
+        .concat();
+        let input = tools(&call("tool=\"read\" index=\"1\"", &body));
+        let calls = parse_with_tools(&input, &defined);
+        assert_eq!(
+            calls[0].function.arguments,
+            r#"{"path":"a","limit":5,"offset":null}"#
+        );
+    }
+
+    #[test]
+    fn arguments_are_byte_identical_when_no_rule_applies() {
+        let defined = [ToolDefinition {
+            name: "run".to_string(),
+            parameters: Some(serde_json::json!({
+                "type": "object",
+                "properties": {"label": {"type": "string"}, "n": {"type": "number"}},
+                "required": ["label"]
+            })),
+            strict: None,
+        }];
+        let raw = r#"{"label": "50",  "n": 1e3}"#;
+        let json = format!("{JSON_OPEN_PREFIX} type=\"object\"{SEP}{raw}{JSON_CLOSE}");
+        let input = tools(&call("tool=\"run\" index=\"1\"", &json));
+        let calls = parse_with_tools(&input, &defined);
+
+        assert_eq!(calls[0].function.arguments, raw);
     }
 
     #[test]

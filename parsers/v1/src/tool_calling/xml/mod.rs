@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 mod glm47_parser;
-pub(crate) use glm47_parser::resolve_local_schema_ref;
+pub(crate) use glm47_parser::{
+    coerce_value, fill_required_nullable, resolve_argument, resolve_local_schema_ref,
+};
 mod kimi_k2_parser;
 mod minimax_m3_parser;
 mod parsed_value;
@@ -10,9 +12,9 @@ mod parser;
 
 use serde::ser::{Serialize, SerializeMap, Serializer};
 
-use parsed_value::ParsedValue;
+pub(crate) use parsed_value::ParsedValue;
 
-struct OrderedArguments<'a>(&'a [(String, ParsedValue)]);
+pub(crate) struct OrderedArguments<'a>(pub(crate) &'a [(String, ParsedValue)]);
 
 impl Serialize for OrderedArguments<'_> {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
