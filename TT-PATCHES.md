@@ -1,6 +1,6 @@
 # Tenstorrent patches on dynamo-parsers
 
-This fork carries the GLM-4.7 tool-call argument fixes the Tenstorrent stack needs, on top of the exact
+This fork carries the GLM-4.7 and Kimi K3 tool-call argument fixes the Tenstorrent stack needs, on top of the exact
 `dynamo-parsers` release the stack's ai-dynamo wheel pins. Nothing here tracks upstream `main`.
 
 ## Branches and tags
@@ -18,6 +18,7 @@ A `+tt.N` tag is cut only after `cargo test -p dynamo-parsers` is green on that 
 
 Patches 1 to 4 are in `parsers/v1/src/tool_calling/xml/glm47_parser.rs` (plus two expected values in
 `conformance/utils/src/glm47_schema_cases.json`); 5 and 6 also touch the streaming jail (`parsers/v1/src/tool_calling/jail/`).
+Patch 7 is in `parsers/v1/src/tool_calling/xtml/kimi_k3_parser.rs` and reuses patch 4's helpers from the GLM-4.7 parser.
 
 | # | Patch | Upstream status |
 | --- | --- | --- |
@@ -27,6 +28,7 @@ Patches 1 to 4 are in `parsers/v1/src/tool_calling/xml/glm47_parser.rs` (plus tw
 | 4 | Coerce quoted scalars where the schema admits no string; fill omitted required nullable keys with null | Not submitted. |
 | 5 | Drop tool calls to functions the request did not offer (fork PR #1, ksriv001) | Not submitted; reverses upstream #263, which passes such calls through so the client can correct the model. Our stack has no executor-side check and scorers count each one as an unknown name. Matches vLLM's `validate_tool_names`. |
 | 6 | Close the remaining unknown-tool paths in the stream jail; content-free logs (fork PR #1) | Not submitted. With a tools list present, the jail holds a chunk's trailing identifier until the next chunk shows it is not a bare call name: up to one chunk of extra latency on prose, released at end of stream. On 11.0.11 the wrapper takes upstream's prose-line indent. |
+| 7 | kimi_k3 parser: patch 4's two rules for Kimi K3 JSON arguments | Not submitted. On 10.0.7 only. |
 
 On 11.0.11 patch 1 is absent (upstream has it): patch 2 as re-applied there also keeps upstream's own changes to the
 file since 10.0.7 (`has_unsupported_schema_ref_scope` is `pub(crate)` for #517; whitespace between `</arg_key>` and

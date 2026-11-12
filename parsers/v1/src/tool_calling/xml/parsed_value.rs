@@ -5,7 +5,7 @@ use serde::Serialize;
 use serde_json::Value;
 use serde_json::value::RawValue;
 
-pub(super) enum ParsedValue {
+pub(crate) enum ParsedValue {
     Json(Value),
     RawNumber(Box<RawValue>),
 }
