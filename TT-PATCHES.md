@@ -7,12 +7,12 @@ This fork carries the GLM-4.7 and Kimi K3 tool-call argument fixes the Tenstorre
 
 | Branch | Base tag | Tag | Serves |
 | --- | --- | --- | --- |
-| `tt/parsers-10.0.7` | `dynamo-parsers-v10.0.7` | `dynamo-parsers-v10.0.7+tt.2` | ai-dynamo 1.6.0, 1.6.1, 1.6.2 |
+| `tt/parsers-10.0.7` | `dynamo-parsers-v10.0.7` | `dynamo-parsers-v10.0.7+tt.3` | ai-dynamo 1.6.0, 1.6.1, 1.6.2 |
 | `tt/parsers-10.2.2` | `dynamo-parsers-v10.2.2` | `dynamo-parsers-v10.2.2+tt.2` | ai-dynamo 1.7.0 pre-releases |
 | `tt/parsers-11.0.11` | `dynamo-parsers-v11.0.11` | `dynamo-parsers-v11.0.11+tt.2` | whatever pins 11.x next |
 
 A `+tt.N` tag is cut only after `cargo test -p dynamo-parsers` is green on that branch. `+tt.1` carried patches 1 to 4;
-`+tt.2` adds patches 5 and 6.
+`+tt.2` adds patches 5 and 6; `+tt.3` adds patch 7 (10.0.7 only).
 
 ## The patches
 
