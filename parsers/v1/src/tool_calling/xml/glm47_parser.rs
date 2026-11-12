@@ -1151,10 +1151,7 @@ fn schema_type_match(
 
 /// A top-level `required` key the model left out is present as JSON null when its
 /// schema admits null: the only value that satisfies such a schema without the key.
-pub(crate) fn fill_required_nullable(
-    schema: &Value,
-    arguments: &mut Vec<(String, ParsedValue)>,
-) {
+pub(crate) fn fill_required_nullable(schema: &Value, arguments: &mut Vec<(String, ParsedValue)>) {
     let Some(required) = schema.get("required").and_then(Value::as_array) else {
         return;
     };
