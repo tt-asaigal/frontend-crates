@@ -326,6 +326,14 @@ pub trait OAIPromptFormatter: Send + Sync + 'static {
     fn render_prompt(&self, req: &dyn OAIChatLikeRequest) -> Result<RenderedPrompt> {
         self.render(req).map(RenderedPrompt::text)
     }
+
+    /// Whether this formatter renders any `tool_calls[].function.arguments`
+    /// string itself, including malformed or non-object JSON. When `false`
+    /// (the default), callers should reject non-object arguments before
+    /// rendering, since templates that iterate them would fail.
+    fn accepts_raw_tool_call_arguments(&self) -> bool {
+        false
+    }
 }
 
 /// Reject Kimi-style Partial Mode in a formatter that cannot leave the final
