@@ -41,18 +41,21 @@ const END_OF_MSG_TOKEN: &str = "<|end_of_msg|>";
 /// `image_prompts` is the model author's hook for exactly this choice, and
 /// `<|kimi_image_placeholder|>` is only its `None` fallback.
 const MEDIA_PAD: &str = "<|media_pad|>";
-const VALID_THINKING_EFFORTS: &[&str] = &["low", "high", "max"];
+/// `encoding_k3._VALID_THINKING_EFFORTS`.
+const VALID_THINKING_EFFORTS: &[&str] = &["low", "medium", "high", "max"];
 
 #[derive(Debug, Clone)]
-pub struct KimiK3Formatter {
-    exclude_tools_when_tool_choice_none: bool,
-}
+pub struct KimiK3Formatter {}
 
 impl KimiK3Formatter {
-    pub fn new(exclude_tools_when_tool_choice_none: bool) -> Self {
-        Self {
-            exclude_tools_when_tool_choice_none,
-        }
+    /// `exclude_tools_when_tool_choice_none` is accepted for API compatibility
+    /// and ignored. K3 has a native `tool_choice=none` channel: the official
+    /// `encoding_k3.py` keeps the tool declarations and appends a
+    /// `tool-choice` system message telling the model not to call them.
+    /// Dropping the declarations (Dynamo's generic default for Jinja
+    /// templates) diverges from the model's training format.
+    pub fn new(_exclude_tools_when_tool_choice_none: bool) -> Self {
+        Self {}
     }
 
     /// Render the conversation into segments, also returning how many trailing
@@ -68,7 +71,15 @@ impl KimiK3Formatter {
 
         let tool_choice = req.tool_choice().map(json_value).transpose()?;
         let (tool_choice_kind, named_tool) = resolve_tool_choice(tool_choice.as_ref())?;
-        let mut tools = req.tools().map(json_value).transpose()?;
+        // Prefer the tools exactly as the client sent them. `tools()` is the
+        // Jinja view, which `may_be_fix_tool_schema` backfills with
+        // `"description": ""` and `type`/`properties`; encoding_k3.py renders
+        // the declarations as given, so the backfill shows up as extra prompt
+        // tokens (+2 per tool without a description).
+        let tools = match req.raw_tools() {
+            Some(tools) => Some(tools),
+            None => req.tools().map(json_value).transpose()?,
+        };
         // A named tool_choice may target a message-level declaration that
         // never appears in the top-level list.
         if let Some(named_tool) = named_tool
@@ -84,9 +95,6 @@ impl KimiK3Formatter {
             ))
             .into());
         }
-        if self.exclude_tools_when_tool_choice_none && tool_choice_kind == Some("none") {
-            tools = None;
-        }
         let tools = tools.map(deep_sort);
 
         let args = req.chat_template_args();
@@ -97,7 +105,7 @@ impl KimiK3Formatter {
         let thinking_effort = resolve_thinking_effort(args);
         if thinking && !VALID_THINKING_EFFORTS.contains(&thinking_effort.as_str()) {
             return Err(PromptRenderError::invalid_request(format!(
-                "Unsupported Kimi K3 thinking_effort={thinking_effort:?}; supported values are low, high, and max"
+                "Unsupported Kimi K3 thinking_effort={thinking_effort:?}; supported values are low, medium, high, and max"
             ))
             .into());
         }
@@ -1644,14 +1652,14 @@ mod tests {
         let mut request = Request::new(json!([{"role": "user", "content": "Hello"}]));
         request.args.insert(
             "thinking_effort".to_string(),
-            Value::String("medium".to_string()),
+            Value::String("extreme".to_string()),
         );
 
         let error = fmt().render(&request).unwrap_err();
         assert!(matches!(
             error.downcast_ref::<PromptRenderError>(),
             Some(PromptRenderError::InvalidRequest(message))
-                if message.contains("thinking_effort=\"medium\"")
+                if message.contains("thinking_effort=\"extreme\"")
         ));
     }
 

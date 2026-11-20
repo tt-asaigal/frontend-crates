@@ -262,6 +262,14 @@ pub trait OAIChatLikeRequest {
     fn tools(&self) -> Option<Value> {
         None
     }
+    /// The request's tools exactly as the client sent them, before the
+    /// template-compatibility backfill `tools()` applies
+    /// ([`may_be_fix_tool_schema`]). Native renderers that must reproduce a
+    /// model's own encoder byte for byte (Kimi K3) prefer this; `None` makes
+    /// them fall back to `tools()`.
+    fn raw_tools(&self) -> Option<serde_json::Value> {
+        None
+    }
     fn tool_choice(&self) -> Option<Value> {
         None
     }
