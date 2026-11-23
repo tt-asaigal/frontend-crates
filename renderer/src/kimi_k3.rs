@@ -12,7 +12,7 @@
 use std::collections::HashMap;
 
 use anyhow::{Context, Result, bail};
-use serde_json::Value;
+use serde_json::{Value, value::RawValue};
 
 use crate::{
     OAIChatLikeRequest, OAIPromptFormatter, PromptRenderError, RenderedPrompt, RenderedSegment,
@@ -41,7 +41,7 @@ const END_OF_MSG_TOKEN: &str = "<|end_of_msg|>";
 /// `image_prompts` is the model author's hook for exactly this choice, and
 /// `<|kimi_image_placeholder|>` is only its `None` fallback.
 const MEDIA_PAD: &str = "<|media_pad|>";
-const VALID_THINKING_EFFORTS: &[&str] = &["low", "medium", "high", "max"];
+const VALID_THINKING_EFFORTS: &[&str] = &["low", "high", "max"];
 
 #[derive(Debug, Clone)]
 pub struct KimiK3Formatter;
@@ -97,7 +97,7 @@ impl KimiK3Formatter {
         let thinking_effort = resolve_thinking_effort(args);
         if thinking && !VALID_THINKING_EFFORTS.contains(&thinking_effort.as_str()) {
             return Err(PromptRenderError::invalid_request(format!(
-                "Unsupported Kimi K3 thinking_effort={thinking_effort:?}; supported values are low, medium, high, and max"
+                "Unsupported Kimi K3 thinking_effort={thinking_effort:?}; supported values are low, high, and max"
             ))
             .into());
         }
@@ -612,7 +612,7 @@ fn normalize_arguments(arguments: Option<&Value>) -> Result<NormalizedArguments>
         Value::String(arguments) if arguments.is_empty() => {
             Ok(NormalizedArguments::Arguments(Vec::new()))
         }
-        Value::String(arguments) => Ok(match py_json::parse_arguments_object(arguments) {
+        Value::String(arguments) => Ok(match parse_arguments_object(arguments) {
             Some(parsed) => NormalizedArguments::Arguments(parsed),
             None => NormalizedArguments::JsonBlock(arguments.clone()),
         }),
@@ -620,190 +620,57 @@ fn normalize_arguments(arguments: Option<&Value>) -> Result<NormalizedArguments>
     }
 }
 
-/// `encoding_k3._parse_arguments_object` and the CPython `json` scanner
-/// (`JSONDecoder(strict=False).raw_decode`) it relies on. Like CPython it
-/// accepts `NaN`/`Infinity`, raw control characters in strings, duplicate
-/// keys and trailing text; `None` is where Python raises `ValueError`.
-mod py_json {
-    use super::XtmlArgument;
-
-    /// Deeper input is treated as malformed (CPython raises `RecursionError`).
-    const MAX_DEPTH: usize = 512;
-
-    fn skip_ws(bytes: &[u8], mut idx: usize) -> usize {
+/// `encoding_k3._parse_arguments_object`, with serde_json standing in for
+/// Python's `json.raw_decode`. Stricter than Python: `NaN`/`Infinity`, raw
+/// control characters in strings and lone surrogates are malformed here.
+fn parse_arguments_object(text: &str) -> Option<Vec<XtmlArgument>> {
+    let bytes = text.as_bytes();
+    let skip_ws = |mut idx: usize| {
         while matches!(bytes.get(idx), Some(b' ' | b'\t' | b'\n' | b'\r')) {
             idx += 1;
         }
         idx
-    }
+    };
+    // One JSON value starting at `idx`: its text and the index just past it.
+    let raw_decode = |idx: usize| {
+        let mut values = serde_json::Deserializer::from_str(&text[idx..]).into_iter::<&RawValue>();
+        let value = values.next()?.ok()?;
+        Some((value.get(), idx + values.byte_offset()))
+    };
 
-    /// The index just past a run of one or more digits starting at `idx`.
-    fn digits(bytes: &[u8], idx: usize) -> Option<usize> {
-        let run = bytes
-            .get(idx..)?
-            .iter()
-            .take_while(|byte| byte.is_ascii_digit());
-        Some(idx + run.count()).filter(|&end| end > idx)
+    let mut idx = skip_ws(0);
+    if bytes.get(idx) != Some(&b'{') {
+        return None;
     }
-
-    fn hex4(bytes: &[u8], idx: usize) -> Option<u32> {
-        let digits = bytes.get(idx..idx + 4)?;
-        digits.iter().try_fold(0u32, |acc, &digit| {
-            Some((acc << 4) | char::from(digit).to_digit(16)?)
-        })
+    idx = skip_ws(idx + 1);
+    let mut parsed = Vec::new();
+    if *bytes.get(idx)? == b'}' {
+        return Some(parsed);
     }
-
-    /// `idx` is just past the opening quote. Returns the decoded string and the
-    /// index just past the closing quote.
-    fn scan_string(text: &str, mut idx: usize) -> Option<(String, usize)> {
-        let bytes = text.as_bytes();
-        let mut out = String::new();
-        let mut chunk_start = idx;
-        loop {
-            match *bytes.get(idx)? {
-                b'"' => {
-                    out.push_str(&text[chunk_start..idx]);
-                    return Some((out, idx + 1));
-                }
-                b'\\' => {
-                    out.push_str(&text[chunk_start..idx]);
-                    idx += 1;
-                    out.push(match *bytes.get(idx)? {
-                        b'b' => '\u{8}',
-                        b'f' => '\u{c}',
-                        b'n' => '\n',
-                        b'r' => '\r',
-                        b't' => '\t',
-                        b'u' => {
-                            let mut code = hex4(bytes, idx + 1)?;
-                            idx += 4;
-                            if (0xD800..=0xDBFF).contains(&code)
-                                && bytes[idx + 1..].starts_with(b"\\u")
-                            {
-                                let low = hex4(bytes, idx + 3)?;
-                                if (0xDC00..=0xDFFF).contains(&low) {
-                                    code = 0x10000 + ((code - 0xD800) << 10) + (low - 0xDC00);
-                                    idx += 6;
-                                }
-                            }
-                            // Python keeps a lone surrogate; Rust strings cannot.
-                            char::from_u32(code).unwrap_or('\u{FFFD}')
-                        }
-                        escaped @ (b'"' | b'\\' | b'/') => char::from(escaped),
-                        _ => return None,
-                    });
-                    idx += 1;
-                    chunk_start = idx;
-                }
-                // strict=False: raw control characters are allowed.
-                _ => idx += 1,
-            }
-        }
-    }
-
-    fn scan_number(bytes: &[u8], mut idx: usize) -> Option<usize> {
-        if bytes.get(idx) == Some(&b'-') {
-            idx += 1;
-        }
-        idx = match bytes.get(idx) {
-            Some(b'0') => idx + 1,
-            _ => digits(bytes, idx)?,
-        };
-        if bytes.get(idx) == Some(&b'.')
-            && let Some(end) = digits(bytes, idx + 1)
-        {
-            idx = end;
-        }
-        if matches!(bytes.get(idx), Some(b'e' | b'E')) {
-            let sign = matches!(bytes.get(idx + 1), Some(b'+' | b'-')) as usize;
-            idx = digits(bytes, idx + 1 + sign).unwrap_or(idx);
-        }
-        Some(idx)
-    }
-
-    /// Scans the members of an object (`close == b'}'`) or array (`b']'`);
-    /// `idx` is just past the opening bracket. Returns the index just past
-    /// `close`. Object members are also appended to `arguments`, if given.
-    fn scan_members(
-        text: &str,
-        idx: usize,
-        depth: usize,
-        close: u8,
-        mut arguments: Option<&mut Vec<XtmlArgument>>,
-    ) -> Option<usize> {
-        let bytes = text.as_bytes();
-        let mut idx = skip_ws(bytes, idx);
-        if bytes.get(idx) == Some(&close) {
-            return Some(idx + 1);
-        }
-        loop {
-            let mut key = String::new();
-            if close == b'}' {
-                if bytes.get(idx) != Some(&b'"') {
-                    return None;
-                }
-                (key, idx) = scan_string(text, idx + 1)?;
-                idx = skip_ws(bytes, idx);
-                if bytes.get(idx) != Some(&b':') {
-                    return None;
-                }
-                idx = skip_ws(bytes, idx + 1);
-            }
-            let (kind, string, end) = scan_value(text, idx, depth)?;
-            if let Some(arguments) = arguments.as_deref_mut() {
-                let rendered = string.unwrap_or_else(|| text[idx..end].to_string());
-                arguments.push((key, kind, rendered));
-            }
-            idx = skip_ws(bytes, end);
-            match *bytes.get(idx)? {
-                b',' => idx = skip_ws(bytes, idx + 1),
-                byte if byte == close => return Some(idx + 1),
-                _ => return None,
-            }
-        }
-    }
-
-    /// CPython's `scan_once`: one JSON value starting exactly at `idx`. Returns
-    /// its XTML type, its decoded text if it is a string, and the index just
-    /// past it.
-    fn scan_value(
-        text: &str,
-        idx: usize,
-        depth: usize,
-    ) -> Option<(&'static str, Option<String>, usize)> {
-        let rest = text.as_bytes().get(idx..)?;
-        if depth > MAX_DEPTH {
+    loop {
+        let (key, end) = raw_decode(idx)?;
+        let key = serde_json::from_str::<String>(key).ok()?;
+        idx = skip_ws(end);
+        if bytes.get(idx) != Some(&b':') {
             return None;
         }
-        let nested = |close| scan_members(text, idx + 1, depth + 1, close, None);
-        let (kind, end) = match rest.first()? {
-            b'"' => {
-                let (string, end) = scan_string(text, idx + 1)?;
-                return Some(("string", Some(string), end));
-            }
-            b'{' => ("object", nested(b'}')?),
-            b'[' => ("array", nested(b']')?),
-            b'n' if rest.starts_with(b"null") => ("null", idx + 4),
-            b't' if rest.starts_with(b"true") => ("boolean", idx + 4),
-            b'f' if rest.starts_with(b"false") => ("boolean", idx + 5),
-            b'N' if rest.starts_with(b"NaN") => ("number", idx + 3),
-            b'I' if rest.starts_with(b"Infinity") => ("number", idx + 8),
-            b'-' if rest.starts_with(b"-Infinity") => ("number", idx + 9),
-            _ => ("number", scan_number(text.as_bytes(), idx)?),
+        idx = skip_ws(idx + 1);
+        let (value, end) = raw_decode(idx)?;
+        let (kind, value) = match value.as_bytes()[0] {
+            b'"' => ("string", serde_json::from_str(value).ok()?),
+            b'{' => ("object", value.to_string()),
+            b'[' => ("array", value.to_string()),
+            b't' | b'f' => ("boolean", value.to_string()),
+            b'n' => ("null", value.to_string()),
+            _ => ("number", value.to_string()),
         };
-        Some((kind, None, end))
-    }
-
-    /// `encoding_k3._parse_arguments_object`; `None` where Python raises
-    /// `ValueError`.
-    pub(super) fn parse_arguments_object(text: &str) -> Option<Vec<XtmlArgument>> {
-        let idx = skip_ws(text.as_bytes(), 0);
-        if text.as_bytes().get(idx) != Some(&b'{') {
-            return None;
+        parsed.push((key, kind, value));
+        idx = skip_ws(end);
+        match *bytes.get(idx)? {
+            b'}' => return Some(parsed),
+            b',' => idx = skip_ws(idx + 1),
+            _ => return None,
         }
-        let mut arguments = Vec::new();
-        scan_members(text, idx + 1, 0, b'}', Some(&mut arguments))?;
-        Some(arguments)
     }
 }
 
@@ -1567,14 +1434,14 @@ mod tests {
         let mut request = Request::new(json!([{"role": "user", "content": "Hello"}]));
         request.args.insert(
             "thinking_effort".to_string(),
-            Value::String("extreme".to_string()),
+            Value::String("medium".to_string()),
         );
 
         let error = fmt().render(&request).unwrap_err();
         assert!(matches!(
             error.downcast_ref::<PromptRenderError>(),
             Some(PromptRenderError::InvalidRequest(message))
-                if message.contains("thinking_effort=\"extreme\"")
+                if message.contains("thinking_effort=\"medium\"")
         ));
     }
 
