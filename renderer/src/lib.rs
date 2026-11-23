@@ -262,11 +262,9 @@ pub trait OAIChatLikeRequest {
     fn tools(&self) -> Option<Value> {
         None
     }
-    /// The request's tools exactly as the client sent them, before the
-    /// template-compatibility backfill `tools()` applies
-    /// ([`may_be_fix_tool_schema`]). Native renderers that must reproduce a
-    /// model's own encoder byte for byte (Kimi K3) prefer this; `None` makes
-    /// them fall back to `tools()`.
+    /// The tools as the client sent them, without the backfill `tools()`
+    /// applies for Jinja templates. Formatters that need it (Kimi K3) fall
+    /// back to `tools()` on `None`.
     fn raw_tools(&self) -> Option<serde_json::Value> {
         None
     }
@@ -335,10 +333,9 @@ pub trait OAIPromptFormatter: Send + Sync + 'static {
         self.render(req).map(RenderedPrompt::text)
     }
 
-    /// Whether this formatter renders any `tool_calls[].function.arguments`
-    /// string itself, including malformed or non-object JSON. When `false`
-    /// (the default), callers should reject non-object arguments before
-    /// rendering, since templates that iterate them would fail.
+    /// Whether this formatter can render any `tool_calls[].function.arguments`
+    /// string, including malformed or non-object JSON. When `false`, callers
+    /// should reject such arguments before rendering.
     fn accepts_raw_tool_call_arguments(&self) -> bool {
         false
     }

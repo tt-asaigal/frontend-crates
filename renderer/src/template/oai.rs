@@ -374,9 +374,7 @@ impl OAIChatLikeRequest for dynamo_protocols::types::CreateChatCompletionRequest
     }
 
     fn raw_tools(&self) -> Option<serde_json::Value> {
-        self.tools
-            .as_ref()
-            .map(|tools| serde_json::to_value(tools).unwrap())
+        serde_json::to_value(self.tools.as_ref()?).ok()
     }
 
     fn tool_choice(&self) -> Option<Value> {
