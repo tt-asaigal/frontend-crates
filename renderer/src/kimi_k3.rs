@@ -12,7 +12,7 @@
 use std::collections::HashMap;
 
 use anyhow::{Context, Result, bail};
-use serde_json::{Map, Value};
+use serde_json::{Value, value::RawValue};
 
 use crate::{
     OAIChatLikeRequest, OAIPromptFormatter, PromptRenderError, RenderedPrompt, RenderedSegment,
@@ -44,15 +44,13 @@ const MEDIA_PAD: &str = "<|media_pad|>";
 const VALID_THINKING_EFFORTS: &[&str] = &["low", "high", "max"];
 
 #[derive(Debug, Clone)]
-pub struct KimiK3Formatter {
-    exclude_tools_when_tool_choice_none: bool,
-}
+pub struct KimiK3Formatter;
 
 impl KimiK3Formatter {
-    pub fn new(exclude_tools_when_tool_choice_none: bool) -> Self {
-        Self {
-            exclude_tools_when_tool_choice_none,
-        }
+    /// The flag is ignored: like encoding_k3.py, `tool_choice=none` keeps the
+    /// tool declarations and adds a `tool-choice` system message.
+    pub fn new(_exclude_tools_when_tool_choice_none: bool) -> Self {
+        Self
     }
 
     /// Render the conversation into segments, also returning how many trailing
@@ -68,7 +66,12 @@ impl KimiK3Formatter {
 
         let tool_choice = req.tool_choice().map(json_value).transpose()?;
         let (tool_choice_kind, named_tool) = resolve_tool_choice(tool_choice.as_ref())?;
-        let mut tools = req.tools().map(json_value).transpose()?;
+        // encoding_k3.py renders the tools as sent; `tools()` backfills
+        // `"description": ""` and `type`/`properties` for Jinja templates.
+        let tools = match req.raw_tools() {
+            Some(tools) => Some(tools),
+            None => req.tools().map(json_value).transpose()?,
+        };
         // A named tool_choice may target a message-level declaration that
         // never appears in the top-level list.
         if let Some(named_tool) = named_tool
@@ -83,9 +86,6 @@ impl KimiK3Formatter {
                 "tool named {named_tool:?} in tool_choice is not present in tools"
             ))
             .into());
-        }
-        if self.exclude_tools_when_tool_choice_none && tool_choice_kind == Some("none") {
-            tools = None;
         }
         let tools = tools.map(deep_sort);
 
@@ -127,6 +127,11 @@ impl OAIPromptFormatter for KimiK3Formatter {
 
     fn render_prompt(&self, req: &dyn OAIChatLikeRequest) -> Result<RenderedPrompt> {
         Ok(self.build_segments(req)?.into_prompt())
+    }
+
+    /// Malformed and non-object arguments render as a raw `<json>` block.
+    fn accepts_raw_tool_call_arguments(&self) -> bool {
+        true
     }
 }
 
@@ -582,27 +587,90 @@ fn python_default_json(value: &Value) -> Result<String> {
     Ok(output)
 }
 
+/// `encoding_k3.XtmlArgument`: `(key, XTML type, rendered text)`.
+type XtmlArgument = (String, &'static str, String);
+
 enum NormalizedArguments {
-    Object(Map<String, Value>),
+    Arguments(Vec<XtmlArgument>),
     JsonBlock(String),
 }
 
+/// `encoding_k3.normalize_tool_arguments`: a JSON string is parsed one level
+/// deep and each value keeps its original bytes; a string that is not a JSON
+/// object becomes a raw `<json>` block.
 fn normalize_arguments(arguments: Option<&Value>) -> Result<NormalizedArguments> {
     let Some(arguments) = arguments else {
-        return Ok(NormalizedArguments::Object(Map::new()));
+        return Ok(NormalizedArguments::Arguments(Vec::new()));
     };
     match arguments {
-        Value::Null => Ok(NormalizedArguments::Object(Map::new())),
-        Value::Object(arguments) => Ok(NormalizedArguments::Object(arguments.clone())),
-        Value::String(arguments) if arguments.trim().is_empty() => {
-            Ok(NormalizedArguments::Object(Map::new()))
+        Value::Null => Ok(NormalizedArguments::Arguments(Vec::new())),
+        Value::Object(arguments) => arguments
+            .iter()
+            .map(|(key, value)| Ok((key.clone(), xtml_type(value), xtml_value(value)?)))
+            .collect::<Result<_>>()
+            .map(NormalizedArguments::Arguments),
+        Value::String(arguments) if arguments.is_empty() => {
+            Ok(NormalizedArguments::Arguments(Vec::new()))
         }
-        Value::String(arguments) => match serde_json::from_str::<Value>(arguments) {
-            Ok(Value::Object(arguments)) => Ok(NormalizedArguments::Object(arguments)),
-            Ok(_) => bail!("Kimi K3 tool call arguments must be a JSON object"),
-            Err(_) => Ok(NormalizedArguments::JsonBlock(arguments.clone())),
-        },
+        Value::String(arguments) => Ok(match parse_arguments_object(arguments) {
+            Some(parsed) => NormalizedArguments::Arguments(parsed),
+            None => NormalizedArguments::JsonBlock(arguments.clone()),
+        }),
         _ => bail!("Kimi K3 tool call arguments must be an object or JSON object string"),
+    }
+}
+
+/// `encoding_k3._parse_arguments_object`, with serde_json standing in for
+/// Python's `json.raw_decode`. Stricter than Python: `NaN`/`Infinity`, raw
+/// control characters in strings and lone surrogates are malformed here.
+fn parse_arguments_object(text: &str) -> Option<Vec<XtmlArgument>> {
+    let bytes = text.as_bytes();
+    let skip_ws = |mut idx: usize| {
+        while matches!(bytes.get(idx), Some(b' ' | b'\t' | b'\n' | b'\r')) {
+            idx += 1;
+        }
+        idx
+    };
+    // One JSON value starting at `idx`: its text and the index just past it.
+    let raw_decode = |idx: usize| {
+        let mut values = serde_json::Deserializer::from_str(&text[idx..]).into_iter::<&RawValue>();
+        let value = values.next()?.ok()?;
+        Some((value.get(), idx + values.byte_offset()))
+    };
+
+    let mut idx = skip_ws(0);
+    if bytes.get(idx) != Some(&b'{') {
+        return None;
+    }
+    idx = skip_ws(idx + 1);
+    let mut parsed = Vec::new();
+    if *bytes.get(idx)? == b'}' {
+        return Some(parsed);
+    }
+    loop {
+        let (key, end) = raw_decode(idx)?;
+        let key = serde_json::from_str::<String>(key).ok()?;
+        idx = skip_ws(end);
+        if bytes.get(idx) != Some(&b':') {
+            return None;
+        }
+        idx = skip_ws(idx + 1);
+        let (value, end) = raw_decode(idx)?;
+        let (kind, value) = match value.as_bytes()[0] {
+            b'"' => ("string", serde_json::from_str(value).ok()?),
+            b'{' => ("object", value.to_string()),
+            b'[' => ("array", value.to_string()),
+            b't' | b'f' => ("boolean", value.to_string()),
+            b'n' => ("null", value.to_string()),
+            _ => ("number", value.to_string()),
+        };
+        parsed.push((key, kind, value));
+        idx = skip_ws(end);
+        match *bytes.get(idx)? {
+            b'}' => return Some(parsed),
+            b',' => idx = skip_ws(idx + 1),
+            _ => return None,
+        }
     }
 }
 
@@ -730,17 +798,17 @@ fn render_assistant_segments(
                 text(segments, raw);
                 close_tag(segments, "json");
             }
-            NormalizedArguments::Object(arguments) => {
-                for (key, value) in arguments {
+            NormalizedArguments::Arguments(arguments) => {
+                for (key, kind, value) in arguments {
                     open_tag(
                         segments,
                         "argument",
                         [
                             ("key".to_string(), key),
-                            ("type".to_string(), xtml_type(&value).to_string()),
+                            ("type".to_string(), kind.to_string()),
                         ],
                     );
-                    text(segments, xtml_value(&value)?);
+                    text(segments, value);
                     close_tag(segments, "argument");
                 }
             }

@@ -262,6 +262,12 @@ pub trait OAIChatLikeRequest {
     fn tools(&self) -> Option<Value> {
         None
     }
+    /// The tools as the client sent them, without the backfill `tools()`
+    /// applies for Jinja templates. Formatters that need it (Kimi K3) fall
+    /// back to `tools()` on `None`.
+    fn raw_tools(&self) -> Option<serde_json::Value> {
+        None
+    }
     fn tool_choice(&self) -> Option<Value> {
         None
     }
@@ -325,6 +331,13 @@ pub trait OAIPromptFormatter: Send + Sync + 'static {
 
     fn render_prompt(&self, req: &dyn OAIChatLikeRequest) -> Result<RenderedPrompt> {
         self.render(req).map(RenderedPrompt::text)
+    }
+
+    /// Whether this formatter can render any `tool_calls[].function.arguments`
+    /// string, including malformed or non-object JSON. When `false`, callers
+    /// should reject such arguments before rendering.
+    fn accepts_raw_tool_call_arguments(&self) -> bool {
+        false
     }
 }
 
